@@ -3,10 +3,14 @@
 #include <functional>
 #include <string>
 #include "arcCpp/struct/Seq.hpp"
+
 namespace arc::util {
-    //std::function<void()> orderFunc[100];
+    std::function<void()>* arrayFunc = nullptr;
 
     void Threads::daemon(std::string name, const std::function<void()> func) {
+        if(arrayFunc == nullptr) {
+            createArray();
+        }
         std::thread thread(func);
 
 
@@ -15,8 +19,16 @@ namespace arc::util {
 
         thread.detach();
     };
-/*void Threads::executor(std::function<void()>) {
+void Threads::executor(std::function<void()>) {
 
-};*/
+
+};
+void Threads::createArray() {
+if(arrayFunc == nullptr) {
+    arrayFunc = new std::function<void()>[100];
+} //Не знаю зачемп эта проверка
+
+
+};
 }
 

@@ -8,3 +8,17 @@ void Threads::daemon(std::string, std::function<void()>) {
 
 }
 метод и очередь в массиве [] анонимных функций чтобы для четырёх потоков разбить задачи, или больше потоков.
+
+struct ThreadForThreads {
+public:
+std::atom<bool> isBusy = false;
+arc::structures::Seq<void()> arrayWork = new arc::structures:;Seq();
+arc::structures::Seq<void()>* arrayWorkReserv = new arc::structures:;Seq();
+
+
+}
+
+В идеале:
+что то использует Threads, и кладётся в очередь выполнения, идёт перебор из Seq, иногда есть паузы на запись изменений.
+Объектов 4 таких.
+Не должно быть Events, там должно быть Seq<Seq<std::function<void()>>, а пока этим я не готов заняться.
