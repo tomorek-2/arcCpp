@@ -37,7 +37,21 @@ auto bytes = inputResult.c_str();
 int i = 0;
 for(int w = 0; i < inputResult.length(); i++) {
     auto charB = bytes[i];
-    if(charB == 32) {
+switch(charB) {
+case 32: 
+
+  i++;
+      //  result = inputResult.substr(0, w);
+        break;
+break;
+case 10:
+
+  arc::util::Log::warn("Неккоректный аргумент");
+        return;
+break;
+
+}
+   /* if(charB == 32) {
         i++;
       //  result = inputResult.substr(0, w);
         break;
@@ -46,7 +60,7 @@ for(int w = 0; i < inputResult.length(); i++) {
     if(charB == 10) {
         arc::util::Log::warn("Неккоректный аргумент");
         return;
-    }
+    } */
     result += charB;
     w++;
 
