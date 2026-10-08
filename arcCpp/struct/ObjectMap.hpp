@@ -52,13 +52,13 @@ while(true) {
 if(i < length) {
     if (hash(key[i]) % length < length) {
         if (!freeSpace[i]) {
-
+if(!newSpace[i]) {
             int keyHash = hash(key[i]) % size;
             newKey[keyHash] = key[i];
             newValue[keyHash] = value[i];
             newSpace[keyHash] = false;
             i++;
-
+}
         } else i++;
     } else break;
 } else break;
@@ -139,7 +139,22 @@ if(existsIsKey) {
             }
 
         };
+         bool contains(K keyP) {
+            if(key == nullptr) resize(length);
+            if(value == nullptr) resize(length);
+            std::hash <K> hash;
 
+            int keyHash = hash(keyP) % length;
+            while (true) {
+                if(keyHash > length) return V{};
+                if (keyP== key[keyHash]) {
+                    return true;
+                } else {
+                    if(keyHash > length) return false;
+                    keyHash++;
+                }
+            }
+        };
         V get(K keyP) {
             if(key == nullptr) resize(length);
             if(value == nullptr) resize(length);
@@ -151,7 +166,7 @@ if(existsIsKey) {
                 if (keyP== key[keyHash]) {
                     return value[keyHash];
                 } else {
-                    if(keyHash >= length) return V{};
+                    if(keyHash > length) return V{};
                     keyHash++;
                 }
             }
@@ -183,6 +198,7 @@ if(existsIsKey) {
     freeSpace = nullptr;
 
 };
+
     };
 }
 #endif

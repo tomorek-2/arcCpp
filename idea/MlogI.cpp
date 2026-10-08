@@ -110,9 +110,18 @@ break;
                     doubleMap.put(result, vaw + vaw2);
 
 
-            }else
+            }else if (result3 == "true") {
+                doubleMap.put(result, vaw + 1);
+            } else if (result3 == "false") {
+                doubleMap.put(result, vaw + 0);
+            } else //Это плохая идея делать ветвление здесь, switch case был лучше, но для bool этого достаточно.
                 arc::util::Log::warn("Что то случилось в конце add:"+ result + "result2"+result2+ "result3"+ result3 + std::to_string(i));
+            } else if(doubleMap.contains(result2)) {
+                doubleMap.put(result, doubleMap.get(result2) + vaw2);
+
+
             } else
+
         arc::util::Log::warn("Что то случилось в конце add 2"+ result + "result2"+result2+ "result3"+ result3 + std::to_string(i));
         });
 OQmap.put("print", [](std::string result2) {

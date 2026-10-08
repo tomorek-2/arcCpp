@@ -3,8 +3,16 @@
 #include <functional>
 #include <string>
 #include "arcCpp/struct/Seq.hpp"
-
+#include <atomic>
 namespace arc::util {
+
+
+        std::atomic<bool> isBusy = false;
+        arc::structures::Seq<std::function<void()>>* arrayWork = new arc::structures::Seq<std::function<void()>>();
+
+
+
+
     std::function<void()>* arrayFunc = nullptr;
 
     void Threads::daemon(std::string name, const std::function<void()> func) {
@@ -19,16 +27,19 @@ namespace arc::util {
 
         thread.detach();
     };
-void Threads::executor(std::function<void()>) {
+void Threads::executor(std::function<void()> &func) {
+
+
 
 
 };
 void Threads::createArray() {
 if(arrayFunc == nullptr) {
     arrayFunc = new std::function<void()>[100];
-} //Не знаю зачемп эта проверка
+} //Не знаю зачем эта проверка
 
 
 };
+
 }
 

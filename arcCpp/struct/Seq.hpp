@@ -21,7 +21,12 @@ namespace arc::structures {
 
 
         };
+Seq() {
+  if(items == nullptr) {
+      createArray(length);
+}
 
+};
         void add(T item)  {
             totalSpace++;
             if(items == nullptr) createArray(length);
@@ -83,6 +88,7 @@ if(key >= length) return T{};
             delete[] items;
             items = nullptr;
         };
+
         void clear() {
             delete[] items;
             items = nullptr;
