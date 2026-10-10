@@ -47,6 +47,10 @@ uint8_t* arrayWWWWW = new uint8_t[8]{0, 1, 4, 4, 1, 2, 3, 2};
 arc::util::io::Reads reads(arrayWWWWW, 8);
 
 arc::util::Log::logLevel = reads.i();
+delete[] arrayWWWWW;
+arrayWWWWW = new uint8_t[8]{'w', 'a', 's', 'd', 'e', 'q', 'r', 't'};
+    arc::util::io::Reads reads2(arrayWWWWW, 8);
+arc::util::Log::log(reads2.str(7));
 arc::util::Log::err("   "+std::to_string(arc::util::Log::logLevel) + " " + std::to_string( reads.i()));
 arc::util::Log::log("if you see this, logLevel dont work");
 arc::util::Log::warn("if you see this, logLevel work");
@@ -62,14 +66,7 @@ arc::Events::on([](){
 arc::util::Threads::daemon("outputArchitecture", []() {
     arc::Events::fire("outputArchitecture");
 });
-//arc::util::Log::info(arc::util::OS::isArm() ? "OS: ARM " : arc::util::OS::isX64() ? "OS: X64 " + arc::util::OS::osVersion() : "OS: Unknown");
-    // ГЛАВНЫЙ ЦИКЛ (Game Loop)
- /* SDL_Renderer* renderer = SDL_CreateRenderer(
-    window, -1,
-    SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC
-); */
 
-// 3. Создание тестовой текстуры (красный квадрат 50x50)
 SDL_Surface* surface  = SDL_LoadBMP("silicon-crucible.bmp");
 //SDL_FillRect(surface, nullptr, SDL_MapRGBA(surface->format, 255, 0, 0, 255));
 
