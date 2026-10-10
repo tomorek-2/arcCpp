@@ -69,32 +69,36 @@ break;
 
             for(int w = 0; i < inputResult.length(); i++) {
                 auto charB = bytes[i];
-                if(charB == 32) {
-                    i++;
-                  //  result2 = inputResult.substr(result.length() + 1, i);
-                    break;
+                switch(charB) {
+                    case 32:
 
-                }
-                if(charB == 10) {
-                 //   arc::util::Log::warn("Неккоректный аргумент");
-                    return;
-                }
+                        i++;
+                        //  result = inputResult.substr(0, w);
+                        break;
+                        break;
+                    case 10:
+
+                        arc::util::Log::warn("Неккоректный аргумент");
+                        return;
+                        break;
                 result2 += charB;
                 w++;
 
             }
             for(int w = 0; i < inputResult.length(); i++) {
                 auto charB = bytes[i];
-                if(charB == 32) {
-                    i++;
-                   // result3 = inputResult.substr(result2.length() + 1, i);
-                    break;
+                switch(charB) {
+                    case 32:
 
-                }
-                if(charB == 10) {
-                    //   arc::util::Log::warn("Неккоректный аргумент");
-                    break;
-                }
+                        i++;
+                        //  result = inputResult.substr(0, w);
+                        break;
+                        break;
+                    case 10:
+
+                        arc::util::Log::warn("Неккоректный аргумент");
+                        return;
+                        break;
                 result3 += charB;
                 w++;
 
@@ -155,6 +159,7 @@ if(!isString) {
 
 OQmap.put("end", [](std::string result2) {
    stepCounter = 0;
+
 });
 
 
@@ -205,6 +210,7 @@ OQmap.put("op", [](std::string inputResult) {
         }
         operat += charB;
         w++;
+
 
         }
 for(int w = 0; i < inputResult.length(); i++) {
@@ -284,7 +290,7 @@ if(resultVoid) {
        return;
    }
 
-   //arc::util::Log::warn(" запись в карту идёт" +  result + "#");
+
         doubleMap.put(result, vaw);
     } else      arc::util::Log::warn("66 строка ошибка");
     return;
@@ -439,6 +445,7 @@ while(true) {
         p.start();
 
     }
+
     usleep(0.001);
 }
 }

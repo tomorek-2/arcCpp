@@ -4,10 +4,11 @@
 #include "arcCpp/util/OS.hpp"
 #include "arcCpp/Events.hpp"
 #include "arcCpp/util/Threads.hpp"
+#include "arcCpp/util/io/Reads.hpp"
 class SdlTest {
     SDL_Window* sdlwin;
 public:  SDL_Window* Window() {
-        sdlwin = SDL_CreateWindow("Singularity Draw", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_SHOWN);
+        sdlwin = SDL_CreateWindow("Singularity Draw", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 800, SDL_WINDOW_SHOWN);
         return sdlwin;
     }
     ~SdlTest() {
@@ -33,6 +34,8 @@ int* xqe=new int(0);
 int xq = *xqe;
 int xqr;
 float rq = 0;
+int walkX = 0;
+int walkY = 0;
 int orderChar = 0;
 bool orderTwoI = false;
 bool orderThreeI = false;
@@ -40,7 +43,11 @@ char charTest = 0;
 static int numberI = 0;
 arc::util::Log::log("Hello, World!");
 arc::util::Log::warn("Warning!");
-arc::util::Log::logLevel = 4;
+uint8_t* arrayWWWWW = new uint8_t[8]{0, 1, 4, 4, 1, 2, 3, 2};
+arc::util::io::Reads reads(arrayWWWWW, 8);
+
+arc::util::Log::logLevel = reads.i();
+arc::util::Log::err("   "+std::to_string(arc::util::Log::logLevel) + " " + std::to_string( reads.i()));
 arc::util::Log::log("if you see this, logLevel dont work");
 arc::util::Log::warn("if you see this, logLevel work");
     arc::util::Log::info(std::string(" \033[91m") + "red");
@@ -57,7 +64,25 @@ arc::util::Threads::daemon("outputArchitecture", []() {
 });
 //arc::util::Log::info(arc::util::OS::isArm() ? "OS: ARM " : arc::util::OS::isX64() ? "OS: X64 " + arc::util::OS::osVersion() : "OS: Unknown");
     // ГЛАВНЫЙ ЦИКЛ (Game Loop)
+ /* SDL_Renderer* renderer = SDL_CreateRenderer(
+    window, -1,
+    SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC
+); */
 
+// 3. Создание тестовой текстуры (красный квадрат 50x50)
+SDL_Surface* surface  = SDL_LoadBMP("silicon-crucible.bmp");
+//SDL_FillRect(surface, nullptr, SDL_MapRGBA(surface->format, 255, 0, 0, 255));
+
+SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+SDL_FreeSurface(surface); // Поверхность больше не нужна после создания текстуры
+
+// 4. Задание координат и размеров для вывода текстуры
+SDL_Rect dstRect{
+    .x = 0, // Координата X
+    .y = 150, // Координата Y
+    .w = 50,  // Ширина
+    .h = 50   // Высота
+};
     while (running) {
 orderChar++;
 if(orderChar > 255) {
@@ -72,48 +97,77 @@ if(orderTwoI) {
 } else charTest = orderChar;
         // Проверяем события (чтобы окно не зависло)
         while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) running = false;
+            if (event.type == SDL_QUIT) { running = false;
+            } else if (event.type == SDL_TEXTINPUT) {
+
+                char ch = event.text.text[0];
+
+                char ch1 = event.text.text[1];
+               switch(ch) {
+                   case 'w':
+                       walkY = -1;
+
+
+                break;
+                   case 's':
+                       walkY = 1;
+
+                   break;
+                   case 'a':
+                       walkX = -1;
+
+                       break;
+                   case 'd':
+                       walkX = 1;
+
+                       break;
+default:
+
+    walkX = 0;
+    walkY = 0;
+    break;
+            }
+
+
+
+            } else {
+                walkX = 0;
+                walkY = 0;
+            }
         }
 
         numberI++;
 
-arc::Events::on([numberI](){
-auto log = arc::util::OS::OSVersionArchitecture() + std::to_string(numberI);
-    arc::util::Log::info(log);
- //   arc::util::Log::info(std::to_string(numberI));
-}, std::to_string(*" ") + charTest);
-arc::Events::fire(std::to_string(*" ") + charTest);
-        // --- Отрисовка начинается здесь ---
-arc::util::Log::info(std::to_string(*" ") + std::to_string(numberI));
-        // А. Очищаем экран (заливаем черным цветом)
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0); // R, G, B, A
+
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // R, G, B, A
         SDL_RenderClear(renderer);
 
-        // Б. Рисуем Красный Квадрат
-        SDL_Rect rect = {200, 150, 400, 300}; // x, y, ширина, высота
-        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 150); // Красный
-        SDL_RenderFillRect(renderer, &rect);
 
-        if(xqr ==1) rq+=(255.0/800.0); else rq-=(255.0/800.0);
+        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 150); // Красный
+      //  SDL_RenderFillRect(renderer, &rect);
+
+        if(xqr ==1) rq+=(255.0/900.0); else rq-=(255.0/900.0);
+
         if(rq > 255) rq = 0;
 if(xqr ==1) xq++; else xq--;
 if(xq > 800) xqr = -1;
 if(xq < -1) xqr = 1;
+dstRect.y += walkY;
+dstRect.x += walkX;
 
-        // В. Рисуем Синюю Линию
-        SDL_SetRenderDrawColor(renderer, rq, 0, 255, 100); // Синий
-        SDL_RenderDrawLine(renderer, xq, 0, 800, 600);
+SDL_RenderCopy(renderer, texture, nullptr, &dstRect);
 
-        // Г. Выводим всё, что нарисовали, на экран
+
         SDL_RenderPresent(renderer);
 
-        // --- Отрисовка закончилась ---
+
     }
 
     // Очистка
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
+    delete[] arrayWWWWW;
     delete xqe; // Память освобождена
     xqe = nullptr; // Хороший тон: занулить указатель, чтобы не использовать его случайно
 delete sdltest;
