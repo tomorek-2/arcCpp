@@ -13,9 +13,9 @@ namespace arc::structures {
         V *value = nullptr;
         bool *freeSpace = nullptr;
         int length = 405;
-
+int lastUse = 0;
     public:
-        bool replace = false;
+        bool replace = true;
         void resize(int size) {
 
 
@@ -146,7 +146,7 @@ if(existsIsKey) {
 
             int keyHash = hash(keyP) % length;
             while (true) {
-                if(keyHash > length) return V{};
+                if(keyHash >= length) return false;
                 if (keyP== key[keyHash]) {
                     return true;
                 } else {
@@ -161,12 +161,19 @@ if(existsIsKey) {
             std::hash <K> hash;
 
             int keyHash = hash(keyP) % length;
+            if(lastUse < length) {
+                if(!freeSpace[keyHash] && key[lastUse] == keyP) {
+                    return value[lastUse];
+                }
+            }
             while (true) {
-                if(keyHash > length) return V{};
-                if (keyP== key[keyHash]) {
+                if(keyHash >= length) return V{};
+                if (keyP== key[keyHash] && !freeSpace[keyHash]) {
+                    lastUse = keyHash;
                     return value[keyHash];
                 } else {
                     if(keyHash > length) return V{};
+
                     keyHash++;
                 }
             }
@@ -188,7 +195,17 @@ if(existsIsKey) {
 
             }
     };
+void clear() {
 
+    delete[] key;
+    key = nullptr;
+    delete[] value;
+    value = nullptr;
+    delete[] freeSpace;
+    freeSpace = nullptr;
+    length = 405;
+    resize(length);
+}
 ~ObjectMap() {
   delete[] key;
   key = nullptr;

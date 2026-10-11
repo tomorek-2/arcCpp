@@ -3,14 +3,16 @@
 #include <functional>
 #include <string>
 #include "arcCpp/struct/ObjectMap.hpp"
+#include "arcCpp/struct/Seq.hpp"
 namespace arc {
     class Events {
 
     public:
       static  void on(const std::function<void()>& callbackF, std::string);
-      static  arc::structures::ObjectMap<std::string, std::function<void()>> eventsMa;
+      static  arc::structures::ObjectMap<std::string, arc::structures::Seq<std::function<void()>>*> eventsMa;
         static void fire(std::string name);
 static void remove(std::string name);
+static void clear();
     private:
 
         Events() = delete;

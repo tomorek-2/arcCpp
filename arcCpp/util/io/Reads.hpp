@@ -43,13 +43,17 @@ return result;
         std::string str(int size) {
 
             if(arrayBytes == nullptr || sizeArray < size || pos > sizeArray) {
-                return 0;
+                return "";
 
             }
-            std::string* tmpstr = new std::string;
-            memccpy(tmpstr, arrayBytes + pos, size, 0);
-            return tmpstr;
+            char* tmpstr = new char[size];
+            std::memcpy(tmpstr, arrayBytes + pos, size);
+            skipByte(size);
 
+
+            std::string tmpstring(tmpstr, size);
+            delete[] tmpstr;
+            return tmpstring;
         }
         ~Reads(){
 delete[] arrayBytes;

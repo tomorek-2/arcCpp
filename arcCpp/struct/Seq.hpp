@@ -1,6 +1,7 @@
 #ifndef ARC_STRUCTURE_SEQ_HPP
 #define ARC_STRUCTURE_SEQ_HPP
 #include <string>
+#include <stdexcept>
 namespace arc::structures {
 
     template <typename T>
@@ -21,12 +22,30 @@ namespace arc::structures {
 
 
         };
-Seq() {
-  if(items == nullptr) {
-      createArray(length);
-}
 
-};
+        Seq() {
+            if(items == nullptr) {
+                createArray(length);
+            }
+
+        };
+        Seq(int size) {
+            if(items == nullptr) {
+                if (size > 5) {
+                    length = size;
+                    createArray(length);
+                } else throw std::invalid_argument("Передано в конструктор seq размер меньше 5");
+            }
+        };
+        Seq(int size, T item) {
+            if(items == nullptr) {
+                if (size > 5) {
+                    length = size;
+                    createArray(length);
+                   add(item);
+                } else throw std::invalid_argument("Передано в конструктор seq размер меньше 5");
+            }
+        };
         void add(T item)  {
             totalSpace++;
             if(items == nullptr) createArray(length);
@@ -85,6 +104,7 @@ if(key >= length) return T{};
              return;
          };
         ~Seq() {
+            if(items != nullptr)
             delete[] items;
             items = nullptr;
         };
@@ -123,7 +143,6 @@ if(key >= length) return T{};
 
 
         };
-
 
     };
     

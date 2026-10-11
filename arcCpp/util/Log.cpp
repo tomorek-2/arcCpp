@@ -23,10 +23,8 @@ arc::util::LogHandler logger;
 
     void Log::err(const std::string_view &str) {
 
-        if (arc::util::Log::logLevel >= 1) {
             logger.log(str);
-          //  std::cerr << str << "\n"<<"\033[39m"<< std::flush;
-        }
+
     }
 
     void Log::debug(const std::string &str) {
