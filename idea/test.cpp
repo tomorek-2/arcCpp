@@ -61,10 +61,14 @@ arc::util::Log::info(arc::util::OS::userHome());
     arc::util::Log::log(arc::util::OS::isLinux() ? "OS: Linux" : arc::util::OS::isUnix() ? "OS: Unix" : "OS: Unknown");
 arc::util::Log::info(arc::util::OS::OSVersionArchitecture());
 arc::Events::on([](){
-    arc::util::Log::info(arc::util::OS::OSVersionArchitecture());
+    arc::util::Log::info(arc::util::OS::OSVersionArchitecture() + "   1");
 }, "outputArchitecture");
+    arc::Events::on([](){
+        arc::util::Log::info(arc::util::OS::OSVersionArchitecture() + "   2");
+    }, "outputArchitecture");
 arc::util::Threads::daemon("outputArchitecture", []() {
     arc::Events::fire("outputArchitecture");
+  //  arc::Events::fire("outputArchitecture2");
 });
 
 SDL_Surface* surface  = SDL_LoadBMP("silicon-crucible.bmp");
@@ -81,6 +85,7 @@ SDL_Rect dstRect{
     .h = 50   // Высота
 };
     while (running) {
+        arc::Events::fire("outputArchitecture");
 orderChar++;
 if(orderChar > 255) {
     orderChar = 0;
@@ -164,6 +169,7 @@ SDL_RenderCopy(renderer, texture, nullptr, &dstRect);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
+    arc::Events::clear();
     delete[] arrayWWWWW;
     delete xqe; // Память освобождена
     xqe = nullptr; // Хороший тон: занулить указатель, чтобы не использовать его случайно
