@@ -1,10 +1,13 @@
 #include <SDL2/SDL.h>
 #include <iostream>
+#include <fcntl.h>
+#include <unistd.h>
 #include "arcCpp/util/Log.hpp"
 #include "arcCpp/util/OS.hpp"
 #include "arcCpp/Events.hpp"
 #include "arcCpp/util/Threads.hpp"
 #include "arcCpp/util/io/Reads.hpp"
+
 class SdlTest {
     SDL_Window* sdlwin;
 public:  SDL_Window* Window() {
@@ -51,9 +54,26 @@ delete[] arrayWWWWW;
 arrayWWWWW = new uint8_t[8]{'w', 'a', 's', 'd', 'e', 'q', 'r', 't'};
     arc::util::io::Reads reads2(arrayWWWWW, 8);
 arc::util::Log::log(reads2.str(7));
+delete[] arrayWWWWW;
 arc::util::Log::err("   "+std::to_string(arc::util::Log::logLevel) + " " + std::to_string( reads.i()));
 arc::util::Log::log("if you see this, logLevel dont work");
 arc::util::Log::warn("if you see this, logLevel work");
+int numSocketFile = open("/dev/shm/testWWW", O_RDONLY);
+
+   arrayWWWWW = new uint8_t[8]{0, 1, 4, 4, 1, 2, 3, 2};
+
+if(numSocketFile == -1) {
+    arc::util::Log::log(" WA");
+
+} else if(numSocketFile != -1) {
+  if(  read(numSocketFile, arrayWWWWW, 8) <= 4) {
+
+      arc::util::io::Reads reads3(arrayWWWWW, 8);
+      arc::util::Log::log(" " + std::to_string(reads3.i()));
+  }
+
+}
+close(numSocketFile);
     arc::util::Log::info(std::string(" \033[91m") + "red");
 arc::util::Log::info(arc::util::OS::userHome());
     arc::util::Log::info(arc::util::OS::username());
@@ -85,7 +105,7 @@ SDL_Rect dstRect{
     .h = 50   // Высота
 };
     while (running) {
-        arc::Events::fire("outputArchitecture");
+     //   arc::Events::fire("outputArchitecture");
 orderChar++;
 if(orderChar > 255) {
     orderChar = 0;
@@ -97,46 +117,14 @@ if(orderTwoI) {
 } else if (orderThreeI) {
     charTest = 256 + 256 + orderChar;
 } else charTest = orderChar;
-        // Проверяем события (чтобы окно не зависло)
         while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) { running = false;
-            } else if (event.type == SDL_TEXTINPUT) {
-
-                char ch = event.text.text[0];
-
-                char ch1 = event.text.text[1];
-               switch(ch) {
-                   case 'w':
-                       walkY = -1;
-
-
-                break;
-                   case 's':
-                       walkY = 1;
-
-                   break;
-                   case 'a':
-                       walkX = -1;
-
-                       break;
-                   case 'd':
-                       walkX = 1;
-
-                       break;
-default:
-
-    walkX = 0;
-    walkY = 0;
-    break;
+            if (event.type == SDL_QUIT) {
+                running = false;
             }
 
 
-
-            } else {
-                walkX = 0;
-                walkY = 0;
             }
-        }
+
 
         numberI++;
 
