@@ -8,39 +8,36 @@ namespace arc::util {
 arc::util::LogHandler logger;
     void Log::log(const std::string &str) {
 
-        if (arc::util::Log::logLevel >= 5) {
-              logger.log(str);
-            //std::cerr << str << "\n"<<"\033[39m"<< std::flush;
-        }
-        }
+        logger.logLevel(str, arc::util::Log::logLevel, 5);
+
+    }
         void Log::warn(const std::string &str) {
 
-            if (arc::util::Log::logLevel >= 2) {
-              logger.log(str);
-                //    std::cerr << str << "\n"<<"\033[39m"<< std::flush;
-            }
+              logger.logLevel(str, arc::util::Log::logLevel, 2);
+
+
         }
 
     void Log::err(const std::string_view &str) {
 
-            logger.log(str);
+        logger.logLevel(str, arc::util::Log::logLevel, 1);
+
 
     }
 
     void Log::debug(const std::string &str) {
 
-        if (arc::util::Log::logLevel >= 3) {
-          logger.log(str);
-            //std::cerr << str << "\n"<<"\033[39m"<< std::flush;
-        }
+        logger.logLevel(str, arc::util::Log::logLevel, 3);
+
     }
 
     void Log::info(const std::string_view &str) {
 
-        if (arc::util::Log::logLevel >= 4) {
-     logger.log(str);
 
-        }
+            logger.logLevel(str, arc::util::Log::logLevel, 4);
+
+
+
 
     }
 

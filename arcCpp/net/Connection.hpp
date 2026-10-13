@@ -2,12 +2,17 @@
 
 #include <sys/socket.h
 
+namespace arc::net {
+    class Connection {
+    public:
+        void send() {
 
-class Connection {
-public:
-    void send()
+        }
+void read() {
+
+        }
 
 
 
-
-};
+    };
+}

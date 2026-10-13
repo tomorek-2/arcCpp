@@ -13,6 +13,7 @@ namespace arc::structures {
         V *value = nullptr;
         bool *freeSpace = nullptr;
         int length = 405;
+        int totalSpace = 0;
 int lastUse = 0;
     public:
         bool replace = true;
@@ -53,7 +54,7 @@ if(i < length) {
     if (hash(key[i]) % length < length) {
         if (!freeSpace[i]) {
 if(!newSpace[i]) {
-            int keyHash = hash(key[i]) % size;
+          int  keyHash = hash(key[i]) % size;
             newKey[keyHash] = key[i];
             newValue[keyHash] = value[i];
             newSpace[keyHash] = false;
@@ -84,59 +85,44 @@ if(value == nullptr) resize(length);
 bool existsIsKey = false;
 std::hash <K> hash;
 int i4 = 0;
+if(replace) {
+    existsIsKey = contains(keyP);
+}
             int keyHash = hash(keyP) % length;
 while(true) {
-    if(i4 >= length) break;
-if(!replace) break;
-    if(keyHash >= length) break;
-     if(key[keyHash] == keyP) {
+    if(i4 >= length) {
+        resize(length * 2);
+       keyHash = hash(keyP) % length;
+        i4 = 0;
+    }
+    if(keyHash >= length) {
+        resize(length * 2);
+      keyHash = hash(keyP) % length;
+        i4 = 0;
+    }
+    if(freeSpace[keyHash] &&  !existsIsKey) {
+        key[keyHash] = keyP;
+        value[keyHash] = valueP;
+        freeSpace[keyHash] = false;
+        totalSpace++;
+        return;
+    }
+     if(key[keyHash] == keyP && replace) {
+         key[keyHash] = keyP;
          value[keyHash] = valueP;
+         freeSpace[keyHash] = false;
+
          return;
-
      }
-
+     if(totalSpace > length * 0.50) {
+         resize(length * 2);
+keyHash = hash(keyP) % length;
+i4 = 0;
+     }
      keyHash++;
 i4++;
-
 }
-           // if (keyP == key[hash(keyP) % length]) existsIsKey = true;
 
-                keyHash = hash(keyP) % length;
-/*
-if(existsIsKey) {
-    value[keyHash] = valueP;
-    return;
-
-} */
-            while (true) {
-                if(keyHash > length) {
-                    resize(length * 2);
-                    keyHash = hash(keyP) % length;
-                }
-                if(keyHash > (length - 1)) break;
-                if (freeSpace[keyHash]) {
-                    key[keyHash] = keyP;
-                    value[keyHash] = valueP;
-                    freeSpace[keyHash] = false;
-                    return;
-                } else {
-                    if(key[keyHash] == keyP) {
-                        value[keyHash] = valueP;
-                        return;
-
-                    }
-                    keyHash++;
-
-                    if (keyHash > length) {
-                        resize(length * 2);
-                        keyHash = hash(keyP) % length;
-
-                    }
-
-
-                }
-
-            }
 
         };
          bool contains(K keyP) {
@@ -186,6 +172,7 @@ if(existsIsKey) {
             while (true) {
                 if (keyP== key[keyHash]) {
                     freeSpace[keyHash] = true;
+                    totalSpace--;
                     return;
                 } else {
                     if(keyHash > length* 0.8) return;
