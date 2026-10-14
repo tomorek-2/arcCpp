@@ -8,6 +8,7 @@ namespace arc::net {
         void send() {
 
         }
+
 void read() {
 
         }

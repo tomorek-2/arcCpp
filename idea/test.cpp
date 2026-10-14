@@ -7,7 +7,7 @@
 #include "arcCpp/Events.hpp"
 #include "arcCpp/util/Threads.hpp"
 #include "arcCpp/util/io/Reads.hpp"
-
+#include "arcCpp/util/io/Writes.hpp"
 class SdlTest {
     SDL_Window* sdlwin;
 public:  SDL_Window* Window() {
@@ -47,20 +47,27 @@ static int numberI = 0;
 arc::util::Log::log("Hello, World!");
 arc::util::Log::warn("Warning!");
 uint8_t* arrayWWWWW = new uint8_t[8]{0, 1, 4, 4, 1, 2, 3, 2};
-arc::util::io::Reads reads(arrayWWWWW, 8);
 
+arc::util::io::Writes writes(arrayWWWWW, 8);
+    delete[] arrayWWWWW;
+    writes.i(6);
+    arrayWWWWW = writes.toBytes();
+    arc::util::io::Reads reads(arrayWWWWW, 8);
 arc::util::Log::logLevel = reads.i();
-delete[] arrayWWWWW;
-arrayWWWWW = new uint8_t[8]{'w', 'a', 's', 'd', 'e', 'q', 'r', 't'};
+
+arc::util::io::Writes writes2(arrayWWWWW, 8);
+    writes2.str("wasd");
+ //   delete[] arrayWWWWW;
+    arrayWWWWW = writes2.toBytes();
     arc::util::io::Reads reads2(arrayWWWWW, 8);
-arc::util::Log::log(reads2.str(7));
-delete[] arrayWWWWW;
+arc::util::Log::log(reads2.str(8));
+
+
 arc::util::Log::err("   "+std::to_string(arc::util::Log::logLevel) + " " + std::to_string( reads.i()));
 arc::util::Log::log("if you see this, logLevel dont work");
 arc::util::Log::warn("if you see this, logLevel work");
 int numSocketFile = open("/dev/shm/testWWW", O_RDONLY);
 
-   arrayWWWWW = new uint8_t[8]{0, 1, 4, 4, 1, 2, 3, 2};
 
 if(numSocketFile == -1) {
     arc::util::Log::log(" WA");
@@ -158,7 +165,7 @@ SDL_RenderCopy(renderer, texture, nullptr, &dstRect);
     SDL_DestroyWindow(window);
     SDL_Quit();
     arc::Events::clear();
-    delete[] arrayWWWWW;
+   // delete[] arrayWWWWW;
     delete xqe; // Память освобождена
     xqe = nullptr; // Хороший тон: занулить указатель, чтобы не использовать его случайно
 delete sdltest;
