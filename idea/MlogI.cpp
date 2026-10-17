@@ -32,7 +32,7 @@ static std::chrono::steady_clock::time_point waitMS; //Я тут подумал,
 static bool isWaitingMLog = false;
 class parser {
   public:
-std::string* parserStrings(auto inputResult) { //Я добавил этот метод для расширения op.
+void  parserStrings(auto inputResult, std::string* output) { //Я добавил этот метод для расширения op.
     std::string result, result2, result3;
     auto bytes = inputResult.c_str();
     int i = 0;
@@ -50,7 +50,7 @@ std::string* parserStrings(auto inputResult) { //Я добавил этот ме
             case 10:
 
               //  arc::util::Log::warn("Неккоректный аргумент");
-                return new std::string[3]{"", "", ""};
+                return;
                 break;
 
         }
@@ -74,8 +74,8 @@ std::string* parserStrings(auto inputResult) { //Я добавил этот ме
             case 10:
 
               //  arc::util::Log::warn("Неккоректный аргумент");
-
-                return new std::string[3]{result, "", ""};
+                output[0] = result;
+                return;
                 break;
             default:
                 result2 += charB;
@@ -98,7 +98,9 @@ std::string* parserStrings(auto inputResult) { //Я добавил этот ме
             case 13:
             case 10:
                // arc::util::Log::warn("Неккоректный аргумент");
-                return new std::string[3]{result, result2, ""};
+               output[0] = result;
+               output[1] = result2;
+                return;
                 break;
             default:
                 result3 += charB;
@@ -110,8 +112,11 @@ std::string* parserStrings(auto inputResult) { //Я добавил этот ме
             break;
         }
     }
-    return new std::string[3]{result, result2, result3};
-}
+    output[0] = result;
+    output[1] = result2;
+    output[2] = result3;
+
+     }
      void init() {
 
         doubleMap.replace = true;
@@ -120,12 +125,12 @@ std::string* parserStrings(auto inputResult) { //Я добавил этот ме
             auto bytes = inputResult.c_str();
             int i = 0;
             bool breakInFor = false;
-parser parserw;
-     std::string*  tmpSrings = parserw.parserStrings(inputResult);
-result = tmpSrings[0];
-result2 = tmpSrings[1];
-result3 = tmpSrings[2];
-delete[] tmpSrings;
+            parser parserw;
+            std::string tmpStrings[3];
+           parserw.parserStrings(inputResult, tmpStrings);
+            result = tmpStrings[0];
+            result2 = tmpStrings[1];
+            result3 = tmpStrings[2];
             double vaw = 0.0;
             double vaw2 = 0.000000;
             auto [ptr, ec] = std::from_chars(result2.data(), result2.data() + result2.size(), vaw);
@@ -158,11 +163,11 @@ delete[] tmpSrings;
                     return;
                 }
 
-                v.num = ec2 == std::errc{} ? vaw2 : doubleMap.get(result3).num + v.num;
+                v.num = ((ec2 == std::errc{}) ? vaw2 : doubleMap.get(result3).num) + v.num;
                 doubleMap.put(result, v);
             } else   {
               auto v =  doubleMap.get(result2);  //создание временного объекта.
-              v.num += ec2 == std::errc{} ? vaw2 : doubleMap.get(result3).num; //Идёт сама операция сложения: если result3 не смог преобразаваться, то берётся из карты значение.
+              v.num += (ec2 == std::errc{}) ? vaw2 : doubleMap.get(result3).num; //Идёт сама операция сложения: если result3 не смог преобразаваться, то берётся из карты значение.
               doubleMap.put(result, v);
             }
         });
