@@ -3,7 +3,7 @@
 #include <string>
 
 namespace arc::util {
-    class ColorCodes {
+    class ColorCodes { //Это бесполезный класс, лучше была бы структура.
     public:
   static inline  std::string flush = "\033[H\033[2J",
                 reset = "\u001B[0m",

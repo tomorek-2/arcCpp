@@ -90,14 +90,14 @@ if(key >= length) return T{};
          void remove(int index) {
              totalSpace--;
              if(items == nullptr) createArray(length);
-
-             items[index] = items[freeSpace];
+             freeSpace[index] = false;
+             return;
          };
          void remove(T item) {
              totalSpace--;
              for(int i = 0; i < length; i++) {
                if(item == items[i]) {
-                   freeSpace = i;
+                   freeSpace[i] = false;
                    return;
                }
            }

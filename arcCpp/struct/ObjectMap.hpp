@@ -148,7 +148,7 @@ i4++;
 
             int keyHash = hash(keyP) % length;
             if(lastUse < length) {
-                if(!freeSpace[keyHash] && key[lastUse] == keyP) {
+                if(!freeSpace[lastUse] && key[lastUse] == keyP) {
                     return value[lastUse];
                 }
             }
@@ -183,7 +183,7 @@ i4++;
             }
     };
 void clear() {
-
+//Пусть будет.
     delete[] key;
     key = nullptr;
     delete[] value;
