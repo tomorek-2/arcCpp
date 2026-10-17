@@ -27,9 +27,10 @@ namespace arc::util {
 
         thread.detach();
     };
-void Threads::executor(std::function<void()> &func) {
+void Threads::executor(std::function<void()> func) {
 
-
+    std::thread thread(func);
+    thread.detach();
 
 
 };

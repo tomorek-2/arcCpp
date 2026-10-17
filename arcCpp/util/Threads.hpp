@@ -20,7 +20,7 @@ arc::structures::Seq<std::function<void()>>* arrayWork = new arc::structures::Se
     class Threads {
     public:
 static void daemon(std::string name, std::function<void()> func);
-static void executor(std::function<void()> &func);
+static void executor(std::function<void()> func);
 
 private:
 static void createArray();
