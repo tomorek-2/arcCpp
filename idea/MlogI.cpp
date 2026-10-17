@@ -32,7 +32,86 @@ static std::chrono::steady_clock::time_point waitMS; //Я тут подумал,
 static bool isWaitingMLog = false;
 class parser {
   public:
+std::string* parserStrings(auto inputResult) { //Я добавил этот метод для расширения op.
+    std::string result, result2, result3;
+    auto bytes = inputResult.c_str();
+    int i = 0;
+    bool breakInFor = false;
+    for(int w = 0; i < inputResult.length(); i++) {
+        auto charB = bytes[i];
+        switch(charB) {
+            case 32:
 
+                i++;
+                result = inputResult.substr(0, w);
+                breakInFor = true;
+                break;
+
+            case 10:
+
+              //  arc::util::Log::warn("Неккоректный аргумент");
+                return new std::string[3]{"", "", ""};
+                break;
+
+        }
+        if(breakInFor) {
+            breakInFor = false;
+            break;
+        }
+        result += charB;
+        w++;
+    }
+
+
+    for(int w = 0; i < inputResult.length(); i++) {
+        auto charB = bytes[i];
+        switch (charB) {
+            case 32:
+
+                i++;
+                breakInFor = true;
+                break;
+            case 10:
+
+              //  arc::util::Log::warn("Неккоректный аргумент");
+
+                return new std::string[3]{result, "", ""};
+                break;
+            default:
+                result2 += charB;
+                w++;
+                break;
+        }
+        if(breakInFor) {
+            breakInFor = false;
+            break;
+        }
+    }
+    for(int w = 0; i < inputResult.length(); i++) {
+        auto charB = bytes[i];
+        switch (charB) {
+            case 32:
+
+                i++;
+                breakInFor = true;
+                break;
+            case 13:
+            case 10:
+               // arc::util::Log::warn("Неккоректный аргумент");
+                return new std::string[3]{result, result2, ""};
+                break;
+            default:
+                result3 += charB;
+                w++;
+                break;
+        }
+        if(breakInFor) {
+            breakInFor = false;
+            break;
+        }
+    }
+    return new std::string[3]{result, result2, result3};
+}
      void init() {
 
         doubleMap.replace = true;
@@ -41,81 +120,14 @@ class parser {
             auto bytes = inputResult.c_str();
             int i = 0;
             bool breakInFor = false;
-            for(int w = 0; i < inputResult.length(); i++) {
-            auto charB = bytes[i];
-            switch(charB) {
-            case 32:
-
-                    i++;
-                    result = inputResult.substr(0, w);
-                    breakInFor = true;
-                    break;
-
-                    case 10:
-
-                    arc::util::Log::warn("Неккоректный аргумент");
-                    return;
-                    break;
-
-            }
-            if(breakInFor) {
-                breakInFor = false;
-                break;
-            }
-            result += charB;
-            w++;
-            }
-
-
-            for(int w = 0; i < inputResult.length(); i++) {
-                auto charB = bytes[i];
-                switch (charB) {
-                    case 32:
-
-                        i++;
-                        breakInFor = true;
-                        break;
-                    case 10:
-
-                        arc::util::Log::warn("Неккоректный аргумент");
-                        return;
-                        break;
-                    default:
-                        result2 += charB;
-                        w++;
-                        break;
-                }
-                if(breakInFor) {
-                    breakInFor = false;
-                    break;
-                }
-            }
-            for(int w = 0; i < inputResult.length(); i++) {
-                auto charB = bytes[i];
-                switch (charB) {
-                    case 32:
-
-                        i++;
-                        breakInFor = true;
-                        break;
-                    case 13:
-                    case 10:
-                        arc::util::Log::warn("Неккоректный аргумент");
-                        return;
-                        break;
-                    default:
-                        result3 += charB;
-                        w++;
-                        break;
-                }
-                if(breakInFor) {
-                    breakInFor = false;
-                    break;
-                }
-            }
-
+parser parserw;
+     std::string*  tmpSrings = parserw.parserStrings(inputResult);
+result = tmpSrings[0];
+result2 = tmpSrings[1];
+result3 = tmpSrings[2];
+delete[] tmpSrings;
             double vaw = 0.0;
-            double vaw2 = 0.0;
+            double vaw2 = 0.000000;
             auto [ptr, ec] = std::from_chars(result2.data(), result2.data() + result2.size(), vaw);
             auto [ptr2, ec2] = std::from_chars(result3.data(), result3.data() + result3.size(), vaw2);
 
@@ -126,18 +138,33 @@ class parser {
                 doubleMap.put(result, v);
 
 
-            }else if (result3 == "true") {
-                    v.num = vaw + 1;
-                doubleMap.put(result, v);
-            } else if (result3 == "false") {
+            } else if(doubleMap.contains(result3)) {
+                    v = doubleMap.get(result3);
+                    if(v.type == 1) {
+                        return;
+                    }
 
-            } else //Это плохая идея делать ветвление здесь, switch case был лучше, но для bool этого достаточно.
-                arc::util::Log::warn("Что то случилось в конце add:"+ result + "result2"+result2+ "result3"+ result3 + std::to_string(i));
+                    v.num = vaw + v.num;
+                    doubleMap.put(result, v);
+                } else   {
+                    auto v =  doubleMap.get(result3);
+               v.num = vaw;
+                    doubleMap.put(result, v);
+                }
+
             } else if(doubleMap.contains(result2)) {
                 v = doubleMap.get(result2);
-                v.num = vaw + v.num;
+                if(v.type == 1) {
+                    return;
+                }
+
+                v.num = ec2 == std::errc{} ? vaw2 : doubleMap.get(result3).num + v.num;
                 doubleMap.put(result, v);
-            } else    arc::util::Log::warn("Что то случилось в конце add:"+ result + "result2"+result2+ "result3"+ result3 + std::to_string(i));
+            } else   {
+              auto v =  doubleMap.get(result2);  //создание временного объекта.
+              v.num += ec2 == std::errc{} ? vaw2 : doubleMap.get(result3).num; //Идёт сама операция сложения: если result3 не смог преобразаваться, то берётся из карты значение.
+              doubleMap.put(result, v);
+            }
         });
         OQmap.put("print", [](std::string result2) {
              const char* bytes = result2.c_str();
@@ -171,7 +198,7 @@ class parser {
         });
 
         OQmap.put("end", [](std::string result2) {
-            stepCounter = 0;
+            stepCounter = -1;
 
         });
 
@@ -329,7 +356,14 @@ class parser {
                   }
 
                   Var v = doubleMap.get(result); v.type = 0; v.num = vaw; doubleMap.put(result, v);
-              } else      arc::util::Log::warn("66 строка ошибка");
+              } else if(doubleMap.contains(result2)) {
+                  Var v = doubleMap.get(result2);
+                  if(v.type == 1) {
+                      Var v2 = doubleMap.get(result); v2.type = 1; v2.str = v.str; doubleMap.put(result, v2);
+
+                  }
+              } else
+              arc::util::Log::warn("66 строка ошибка");
               return;
                  }
 
@@ -340,7 +374,7 @@ class parser {
 
             parser p;
         for(int w = 0; stepCounter < seq.totalSpace; w) {
-            if (ipt < 10000) {
+            if (ipt < 10010) {
 
                 std::string tmpString = "";
                 tmpString = seq.get(stepCounter);
@@ -424,9 +458,8 @@ class parser {
     p.init();
     bool running = false;
     int bytesInTerm = 0;
-
+     arc::util::Log::log("<MLog>");
     while(true) {
-         arc::util::Log::log("<MLog>");
          while(true) {
                   line = "";
                   ioctl(0, FIONREAD, &bytesInTerm);
@@ -466,9 +499,11 @@ class parser {
                     p.add(line);
                  } else if (running) {
                 p.start();
+
                 }
                 usleep(0.001);
         }
+        arc::util::Log::log("<MLog>");
     }
   return 0;
 }
