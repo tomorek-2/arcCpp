@@ -15,13 +15,20 @@
 #include <sys/socket.h>
 #include "arpa/inet.h"
 #include <netdb.h>
+#include <cstdint>
+
+#include <cstring>
 struct Var {
-    int type = 0; //0 Это num, 1 это str. bool это int.
+    int type = 0; //0 Это num, 1 это str. bool это int. 2 ЭтоМаркер?
     std::string str = "";
     double num = 0;
 
 };
 static  arc::structures::ObjectMap<std::string, std::function<void(const std::string&)>> OQmap;
+static    std::atomic<bool> isRunning = false;
+static std::atomic<bool> canEditWWWLine1{true};
+static char* WWWLineBuffer;
+static int SizeWWWLineBuffer;
 static arc::structures::ObjectMap<std::string, Var> doubleMap;
 static arc::structures::ObjectMap<std::string, std::function<void(const std::string&)>> InstructOpMap;
 static arc::structures::Seq<std::string> seq; //Команды.
@@ -120,6 +127,159 @@ void  parserStrings(auto inputResult, std::string* output) { //Я добавил
      void init() {
 
         doubleMap.replace = true;
+         InstructOpMap.put("sub", [](std::string inputResult) {
+             std::string result, result2, result3;
+             auto bytes = inputResult.c_str();
+             int i = 0;
+             bool breakInFor = false;
+             parser parserw;
+             std::string tmpStrings[3];
+             parserw.parserStrings(inputResult, tmpStrings);
+             result = tmpStrings[0];
+             result2 = tmpStrings[1];
+             result3 = tmpStrings[2];
+             double vaw = 0.0;
+             double vaw2 = 0.000000;
+             auto [ptr, ec] = std::from_chars(result2.data(), result2.data() + result2.size(), vaw);
+             auto [ptr2, ec2] = std::from_chars(result3.data(), result3.data() + result3.size(), vaw2);
+
+             Var v = doubleMap.get(result);
+             if( (ec == std::errc{}) && (ptr == result2.data() + result2.size())) {
+                 if ((ec2 == std::errc{}) && (ptr2 == result3.data() + result3.size())) {
+                     v.num = vaw - vaw2;
+                     doubleMap.put(result, v);
+
+
+                 } else if(doubleMap.contains(result3)) {
+                     v = doubleMap.get(result3);
+                     if(v.type == 1) {
+                         return;
+                     }
+
+                     v.num = vaw - v.num;
+                     doubleMap.put(result, v);
+                 } else   {
+                     auto v =  doubleMap.get(result3);
+                     v.num = vaw;
+                     doubleMap.put(result, v);
+                 }
+
+             } else if(doubleMap.contains(result2)) {
+                 v = doubleMap.get(result2);
+                 if(v.type == 1) {
+                     return;
+                 }
+
+                 v.num =  v.num - ((ec2 == std::errc{}) ? vaw2 : doubleMap.get(result3).num) ;
+                 doubleMap.put(result, v);
+             } else   {
+                 auto v =  doubleMap.get(result2);  //создание временного объекта.
+                 v.num -= (ec2 == std::errc{}) ? vaw2 : doubleMap.get(result3).num; //Идёт сама операция сложения: если result3 не смог преобразаваться, то берётся из карты значение.
+                 doubleMap.put(result, v);
+             }
+         });
+         InstructOpMap.put("div", [](std::string inputResult) {
+             std::string result, result2, result3;
+             auto bytes = inputResult.c_str();
+             int i = 0;
+             bool breakInFor = false;
+             parser parserw;
+             std::string tmpStrings[3];
+             parserw.parserStrings(inputResult, tmpStrings);
+             result = tmpStrings[0];
+             result2 = tmpStrings[1];
+             result3 = tmpStrings[2];
+             double vaw = 0.0;
+             double vaw2 = 0.000000;
+             auto [ptr, ec] = std::from_chars(result2.data(), result2.data() + result2.size(), vaw);
+             auto [ptr2, ec2] = std::from_chars(result3.data(), result3.data() + result3.size(), vaw2);
+
+             Var v = doubleMap.get(result);
+             if( (ec == std::errc{}) && (ptr == result2.data() + result2.size())) {
+                 if ((ec2 == std::errc{}) && (ptr2 == result3.data() + result3.size())) {
+                     v.num = vaw / vaw2;
+                     doubleMap.put(result, v);
+
+
+                 } else if(doubleMap.contains(result3)) {
+                     v = doubleMap.get(result3);
+                     if(v.type == 1) {
+                         return;
+                     }
+
+                     v.num = vaw / v.num;
+                     doubleMap.put(result, v);
+                 } else   {
+                     auto v =  doubleMap.get(result3);
+                     v.num = vaw;
+                     doubleMap.put(result, v);
+                 }
+
+             } else if(doubleMap.contains(result2)) {
+                 v = doubleMap.get(result2);
+                 if(v.type == 1) {
+                     return;
+                 }
+
+                 v.num =  v.num / ((ec2 == std::errc{}) ? vaw2 : doubleMap.get(result3).num);
+                 doubleMap.put(result, v);
+             } else   {
+                 auto v =  doubleMap.get(result2);  //создание временного объекта.
+                 v.num /= (ec2 == std::errc{}) ? vaw2 : doubleMap.get(result3).num; //Идёт сама операция сложения: если result3 не смог преобразаваться, то берётся из карты значение.
+                 doubleMap.put(result, v);
+             }
+         });
+         InstructOpMap.put("mul", [](std::string inputResult) {
+             std::string result, result2, result3;
+             auto bytes = inputResult.c_str();
+             int i = 0;
+             bool breakInFor = false;
+             parser parserw;
+             std::string tmpStrings[3];
+             parserw.parserStrings(inputResult, tmpStrings);
+             result = tmpStrings[0];
+             result2 = tmpStrings[1];
+             result3 = tmpStrings[2];
+             double vaw = 0.0;
+             double vaw2 = 0.000000;
+             auto [ptr, ec] = std::from_chars(result2.data(), result2.data() + result2.size(), vaw);
+             auto [ptr2, ec2] = std::from_chars(result3.data(), result3.data() + result3.size(), vaw2);
+
+             Var v = doubleMap.get(result);
+             if( (ec == std::errc{}) && (ptr == result2.data() + result2.size())) {
+                 if ((ec2 == std::errc{}) && (ptr2 == result3.data() + result3.size())) {
+                     v.num = vaw * vaw2;
+                     doubleMap.put(result, v);
+
+
+                 } else if(doubleMap.contains(result3)) {
+                     v = doubleMap.get(result3);
+                     if(v.type == 1) {
+                         return;
+                     }
+
+                     v.num = vaw * v.num;
+                     doubleMap.put(result, v);
+                 } else   {
+                     auto v =  doubleMap.get(result3);
+                     v.num = vaw;
+                     doubleMap.put(result, v);
+                 }
+
+             } else if(doubleMap.contains(result2)) {
+                 v = doubleMap.get(result2);
+                 if(v.type == 1) {
+                     return;
+                 }
+
+                 v.num = ((ec2 == std::errc{}) ? vaw2 : doubleMap.get(result3).num) * v.num;
+                 doubleMap.put(result, v);
+             } else   {
+                 auto v =  doubleMap.get(result2);  //создание временного объекта.
+                 v.num *= (ec2 == std::errc{}) ? vaw2 : doubleMap.get(result3).num; //Идёт сама операция сложения: если result3 не смог преобразаваться, то берётся из карты значение.
+                 doubleMap.put(result, v);
+             }
+         });
         InstructOpMap.put("add", [](std::string inputResult) {
             std::string result, result2, result3;
             auto bytes = inputResult.c_str();
@@ -443,6 +603,7 @@ void  parserStrings(auto inputResult, std::string* output) { //Я добавил
             resultA(result2);
             return;
             } else {
+          if(doubleMap.contains(result)) return;
             arc::util::Log::warn("Неизвестная команда: "+result);
             return;
         }
@@ -453,10 +614,42 @@ void  parserStrings(auto inputResult, std::string* output) { //Я добавил
 
 
  int main() {
+
     std::string command = "";
     arc::util::Log::log("Парсер начинает работу, введите код. # чтобы включить выполнение.");
    // std::getline(std::cin, command);
+   WWWLineBuffer = new char[1024];
+   arc::util::Threads::executor([]() { //Я пытался заставить работать код, но забыл про то, что executor ничего не делал.
+      // arc::util::Log::log("Фоновой поток иницилизировался");
+       int bytesInTermL = 0;
+    std::string line;
+   while(true) {
+       line = "";
+       ioctl(0, FIONREAD, &bytesInTermL);
+       if (bytesInTermL > 0) {
+           char buffer[1024];
+           int input = read(0, buffer, 1023);
+           if (input < 0) {
+               arc::util::Log::log("input равен" + std::to_string(input));
+               input = 0;
+           }
+           buffer[input] = '\0';
+           std::string tmpString(buffer, 0, input - 1);
+if(tmpString == "#") {
+    isRunning = !isRunning;
+}
 
+          if (buffer[input - 1] != 8) {
+               line = tmpString;
+           } else line = std::string(buffer, 0, input - 2);
+       } else line = "";
+       if (line != "") {
+           std::memcpy(WWWLineBuffer, line.c_str(), line.length());
+           SizeWWWLineBuffer = line.length();
+       } else SizeWWWLineBuffer = 0;
+       sleep(0.01);
+   }
+});
     std::ios::sync_with_stdio(false);
     std::string line;
     parser p;
@@ -466,46 +659,31 @@ void  parserStrings(auto inputResult, std::string* output) { //Я добавил
      arc::util::Log::log("<MLog>");
     while(true) {
          while(true) {
-                  line = "";
-                  ioctl(0, FIONREAD, &bytesInTerm);
-                  if (bytesInTerm > 0) {
-                      char buffer[1024];
-                      int input = read(0, buffer, 1023);
-                      if (input < 0) {
-                          arc::util::Log::log("input равен" + std::to_string(input));
-                          input = 0;
-                  }
-                  buffer[input] = '\0';
-                  std::string tmpString(buffer, 0, input - 1);
-                  if (buffer[1] == '#') {
-                  if (running) {
-                  running = false;
-                  } else running = true;
-                  } else
-                  if(buffer[input - 1] != 8) {
-                      line = tmpString;
-                 } else line = std::string(buffer, 0, input - 2);
-                 } else line = "";
+            // if(canEditWWWLine1) {
+                 std::string tmpString(WWWLineBuffer, SizeWWWLineBuffer);
+                 SizeWWWLineBuffer = 0;
+             //}
 
-                 if (line == "#") {
+          /*       if (tmpString == "#") {
                      if (running) {
                       running = false;
                     } else running = true;
                      break;
-                 }
-                 if (line != "") {
-                     if (line == "start") {
+                 } */
+                 if (tmpString != "") {
+
+                     if (tmpString == "start") {
 
                          int code = p.start();
                          if (code == 0)
                         seq.clear();
                         break;
                      }
-                    p.add(line);
-                 } else if (running) {
+                    p.add(tmpString);
+                 } else if (isRunning) {
                 p.start();
 
-                }
+                } else
                 usleep(0.001);
         }
         arc::util::Log::log("<MLog>");
