@@ -59,8 +59,7 @@ class parser {
         switch(charB) {
             case 32:
 
-                i++; //Пропуск пробела
-              //  output[0] = inputResult.substr(0, w);
+                i++;
                 breakInFor = true;
                 break;
 
@@ -76,13 +75,17 @@ class parser {
                 }
                 continue;
                 break;
+            default:
+                output[0] += charB;
+                w++;
+
+                break;
         }
         if(breakInFor) {
             breakInFor = false;
             break;
         }
-        output[0] += charB;
-        w++;
+
     }
    // arc::util::Log::log(output[0]);
 
@@ -110,14 +113,11 @@ class parser {
             break;
         }
     }
+    arc::util::Log::log(output[0]);
     for(int w = 0; i < inputResult.length(); i++) {
         auto charB = bytes[i];
         switch (charB) {
-            case 32:
 
-                i++;
-                breakInFor = true;
-                break;
             case 13:
             case 10:
                // arc::util::Log::warn("Неккоректный аргумент");
@@ -311,11 +311,14 @@ class parser {
             poolString = tmpStrings[0];
             poolString2 = tmpStrings[1];
             poolString3 = tmpStrings[2];
+            if(poolString[0] == 0 && !poolString.empty()) poolString.pop_back();
+            if(poolString2[0] == 0 && !poolString2.empty()) poolString2.pop_back();
+            if(poolString3[0] == 0 && !poolString3.empty()) poolString3.pop_back();
             double vaw = 0.0;
             double vaw2 = 0.000000;
             auto [ptr, ec] = std::from_chars(poolString2.data(), poolString2.data() + poolString2.size(), vaw);
             auto [ptr2, ec2] = std::from_chars(poolString3.data(), poolString3.data() + poolString3.size(), vaw2);
-
+            arc::util::Log::log(std::string(inputResult) + ":;" + poolString +  ":;" + poolString2 + ":;" + poolString3 + ":;:" + std::to_string(poolString.length()) + ":" + std::to_string(poolString2.length()) + ":" + std::to_string(poolString3.length()));
             Var v = doubleMap.get(poolString);
             if( (ec == std::errc{}) && (ptr == poolString2.data() + poolString2.size())) {
                 if ((ec2 == std::errc{}) && (ptr2 == poolString3.data() + poolString3.size())) {
@@ -417,7 +420,7 @@ class parser {
             }
         });
         OQmap.put("op", [](std::string_view inputResult) {
-
+            arc::util::Log::info("a0" + std::string(inputResult));
             poolString.clear();
             poolString2.clear();
             std::string_view operat = "";
@@ -433,8 +436,8 @@ class parser {
 
           auto resultVoid = InstructOpMap.get(poolString);
           if(resultVoid) {
-              //arc::util::Log::log(poolString2);
-              resultVoid(poolString2);
+              arc::util::Log::log("aa" + poolString2);
+              resultVoid(std::string_view(poolString2));
               return;
           } else {
               arc::util::Log::warn(
