@@ -3,7 +3,7 @@
 #include <functional>
 #include <span>
 #include "arcCpp/util/Log.hpp"
-
+#include <type_traits>
 
 namespace arc::structures {
     template <typename K, typename V>
@@ -27,6 +27,7 @@ int lastUse = 0;
                 key = newKey;
                 bool *newSpace = new bool[size];
                 freeSpace = newSpace;
+                lastUse = 0;
                 for(int i = 0; i < size; i++) freeSpace[i] = true;
             } else {
 
@@ -71,7 +72,7 @@ if(!newSpace[i]) {
                 value = newValue;
                 delete[] freeSpace;
                 freeSpace = newSpace;
-
+                lastUse = 0;
                 length = size;
             }
 
@@ -100,7 +101,7 @@ while(true) {
       keyHash = hash(keyP) % length;
         i4 = 0;
     }
-    if(freeSpace[keyHash] &&  !existsIsKey) {
+    if(freeSpace[keyHash] &&  !existsIsKey || replace) {
         key[keyHash] = keyP;
         value[keyHash] = valueP;
         freeSpace[keyHash] = false;
@@ -133,7 +134,7 @@ i4++;
             int keyHash = hash(keyP) % length;
             while (true) {
                 if(keyHash >= length) return false;
-                if (keyP== key[keyHash]) {
+                if (!freeSpace[keyHash] && keyP== key[keyHash]) {
                     return true;
                 } else {
                     if(keyHash > length) return false;
@@ -145,16 +146,24 @@ i4++;
             if(key == nullptr) resize(length);
             if(value == nullptr) resize(length);
             std::hash <K> hash;
-
-            int keyHash = hash(keyP) % length;
+            auto keyWWW = hash(keyP); //Надо было поменять int на auto. Мне нужен такой компилятор, который находил на компиляции
+            int keyHash = keyWWW % length;
             if(lastUse < length) {
                 if(!freeSpace[lastUse] && key[lastUse] == keyP) {
                     return value[lastUse];
                 }
             }
+             // arc::util::Log::log("aOM001");
             while (true) {
-                if(keyHash >= length) return V{};
-                if (keyP== key[keyHash] && !freeSpace[keyHash]) {
+               // arc::util::Log::log("aOM002");
+                if (keyHash >= length) {
+                    if constexpr(std::is_same_v<V, std::string>) {
+                        return "";
+                    } else return V{};
+
+                }
+                if (!freeSpace[keyHash] && keyP== key[keyHash] ) {
+                     //arc::util::Log::log("aOM003");
                     lastUse = keyHash;
                     return value[keyHash];
                 } else {
@@ -191,6 +200,7 @@ void clear() {
     delete[] freeSpace;
     freeSpace = nullptr;
     length = 405;
+    lastUse = 0;
     resize(length);
 }
 ~ObjectMap() {
