@@ -25,26 +25,49 @@ struct Var {
 
 };
 
-static  arc::structures::ObjectMap<std::string, std::function<void(const std::string_view)>> OQmap;
+constexpr std::size_t calculateHash(std::string_view object) {
+constexpr std::uint64_t FnvBasis = 14695981039346656037ULL;
+constexpr std::uint64_t FnvPrime = 1099511628211ULL;
+
+std::uint64_t hash = FnvBasis;
+for (char c : object) {
+hash ^= static_cast<unsigned char>(c);
+hash *= FnvPrime;
+}
+return static_cast<std::size_t>(hash);
+}
+ std::size_t calculateHashRun(std::string_view object) {
+ std::uint64_t FnvBasis = 14695981039346656037ULL;
+ std::uint64_t FnvPrime = 1099511628211ULL;
+
+std::uint64_t hash = FnvBasis;
+for (char c : object) {
+hash ^= static_cast<unsigned char>(c);
+hash *= FnvPrime;
+}
+return static_cast<std::size_t>(hash);
+}
+static  arc::structures::ObjectMap<std::string, std::function<void(std::string&)>> OQmap;
 static    std::atomic<bool> isRunning = false;
 static std::atomic<bool> canEditWWWLine1{true};
 static char* WWWLineBuffer;
 static int SizeWWWLineBuffer;
 static arc::structures::ObjectMap<std::string, Var> doubleMap;
-static arc::structures::ObjectMap<std::string, std::function<void(const std::string_view)>> InstructOpMap;
+static arc::structures::ObjectMap<std::string, std::function<void( std::string&)>> InstructOpMap;
 static arc::structures::Seq<std::string> seq; //Команды.
 static arc::structures::Seq<std::string> seqL;
 static int ipt = 0;
-static  std::string poolString, poolString2, poolString3;
+static  std::string poolString, poolString2, poolString3, poolString4, poolString5;
 
 static int stepCounter = 0;
 static std::chrono::steady_clock::time_point waitMS; //Я тут подумал, чтобы избежать в главном потоке зависаний, нужно для wait логику как в горутинах (я не знаю что такое горутины).
 static bool isWaitingMLog = false;
+
 class parser {
   public:
 
 
-    static void  parserStrings(std::string_view inputResult, std::string* output) { //Я добавил этот метод для расширения op.
+    static void  parserStrings(std::string &inputResult, std::string* output) { //Я добавил этот метод для расширения op.
    // std::string result, result2, result3;
      //arc::util::Log::info(inputResult);
     output[0] = "";
@@ -57,6 +80,7 @@ class parser {
     for(int w = 0; i < inputResult.length(); i++) {
         auto charB = bytes[i];
         switch(charB) {
+
             case 32:
 
                 i++;
@@ -73,6 +97,7 @@ class parser {
                 if(!output[0].empty()) {
                     output[0].pop_back();
                 }
+                w++;
                 continue;
                 break;
             default:
@@ -92,6 +117,9 @@ class parser {
     for(int w = 0; i < inputResult.length(); i++) {
         auto charB = bytes[i];
         switch (charB) {
+            case 0:
+                w++;
+                break;
             case 32:
 
                 i++;
@@ -113,16 +141,17 @@ class parser {
             break;
         }
     }
-    arc::util::Log::log(output[0]);
+
     for(int w = 0; i < inputResult.length(); i++) {
         auto charB = bytes[i];
         switch (charB) {
-
+            case 0:
+                w++;
+                break;
             case 13:
             case 10:
-               // arc::util::Log::warn("Неккоректный аргумент");
-        //       output[0] = result;
-             //  output[1] = result2;
+
+
                 return;
                 break;
             default:
@@ -135,13 +164,13 @@ class parser {
             break;
         }
     }
-
+        //arc::util::Log::log("aa0" + output[0] + ";" + output[1] + ";" + output[2]);
 
      }
      void init() {
 
         doubleMap.replace = true;
-         InstructOpMap.put("sub", [](std::string_view inputResult) {
+         InstructOpMap.put("sub", [](std::string &inputResult) {
              poolString.clear();
              poolString2.clear();
              poolString3.clear();
@@ -194,7 +223,7 @@ class parser {
                  doubleMap.put( poolString, v);
              }
          });
-         InstructOpMap.put("div", [](std::string_view inputResult) {
+         InstructOpMap.put("div", [](std::string &inputResult) {
              poolString.clear();
              poolString2.clear();
              poolString3.clear();
@@ -246,7 +275,7 @@ class parser {
                  doubleMap.put(poolString, v);
              }
          });
-         InstructOpMap.put("mul", [](std::string_view inputResult) {
+         InstructOpMap.put("mul", [](std::string &inputResult) {
              poolString.clear();
              poolString2.clear();
              poolString3.clear();
@@ -299,10 +328,12 @@ class parser {
                  doubleMap.put(poolString, v);
              }
          });
-        InstructOpMap.put("add", [](std::string_view inputResult) {
+        InstructOpMap.put("add", [](std::string &inputResult) {
+
           poolString.clear();
           poolString2.clear();
           poolString3.clear();
+
             int i = 0;
             bool breakInFor = false;
             parser parserw;
@@ -311,6 +342,7 @@ class parser {
             poolString = tmpStrings[0];
             poolString2 = tmpStrings[1];
             poolString3 = tmpStrings[2];
+
             if(poolString[0] == 0 && !poolString.empty()) poolString.pop_back();
             if(poolString2[0] == 0 && !poolString2.empty()) poolString2.pop_back();
             if(poolString3[0] == 0 && !poolString3.empty()) poolString3.pop_back();
@@ -318,7 +350,7 @@ class parser {
             double vaw2 = 0.000000;
             auto [ptr, ec] = std::from_chars(poolString2.data(), poolString2.data() + poolString2.size(), vaw);
             auto [ptr2, ec2] = std::from_chars(poolString3.data(), poolString3.data() + poolString3.size(), vaw2);
-            arc::util::Log::log(std::string(inputResult) + ":;" + poolString +  ":;" + poolString2 + ":;" + poolString3 + ":;:" + std::to_string(poolString.length()) + ":" + std::to_string(poolString2.length()) + ":" + std::to_string(poolString3.length()));
+            // arc::util::Log::log(std::string(inputResult) + ":;" + poolString +  ":;" + poolString2 + ":;" + poolString3 + ":;:" + std::to_string(poolString.length()) + ":" + std::to_string(poolString2.length()) + ":" + std::to_string(poolString3.length()));
             Var v = doubleMap.get(poolString);
             if( (ec == std::errc{}) && (ptr == poolString2.data() + poolString2.size())) {
                 if ((ec2 == std::errc{}) && (ptr2 == poolString3.data() + poolString3.size())) {
@@ -354,9 +386,9 @@ class parser {
               doubleMap.put(poolString, v);
             }
         });
-        OQmap.put("print", [](std::string_view inputResult) {
-             auto bytes = inputResult.data();
-             std::string result, result2;
+        OQmap.put("print", [](std::string inputResult) {
+             auto bytes = inputResult.c_str();
+             std::string  result2;
              std::string result2A;
              auto b = bytes[0];
              int l = 0;
@@ -419,8 +451,8 @@ class parser {
 
             }
         });
-        OQmap.put("op", [](std::string_view inputResult) {
-            arc::util::Log::info("a0" + std::string(inputResult));
+        OQmap.put("op", [](std::string &inputResult) {
+             //arc::util::Log::info("a0" + std::string(inputResult));
             poolString.clear();
             poolString2.clear();
             std::string_view operat = "";
@@ -429,15 +461,15 @@ class parser {
 
             parserStrings(inputResult, tmpStrings);
             poolString = tmpStrings[0];
-            poolString2 = tmpStrings[1];
-            poolString2 += " ";
-            poolString2 += tmpStrings[2];
+            poolString5 = tmpStrings[1];
+            poolString5 += " ";
+            poolString5 += tmpStrings[2];
 
 
           auto resultVoid = InstructOpMap.get(poolString);
           if(resultVoid) {
-              arc::util::Log::log("aa" + poolString2);
-              resultVoid(std::string_view(poolString2));
+              //arc::util::Log::log("aa" + poolString2);
+              resultVoid(poolString5);
               return;
           } else {
               arc::util::Log::warn(
@@ -552,7 +584,7 @@ class parser {
 
             parser p;
         for(int w = 0; stepCounter < seq.totalSpace; w) {
-            if (ipt < 10010) {
+            if (ipt < 10000) {
 
                 std::string tmpString = "";
                 tmpString = seq.get(stepCounter);
@@ -578,9 +610,98 @@ class parser {
             seq.add(line);
         }
     }
+    int operatLogic(std::string_view inputResult) { //Этот метод хорошо бы в so перенести, чтобы на лету менять команды.
+        //1 это операция сложения.
+        auto* outarray = new std::string[3];
+        std::string tmpStr(inputResult);
+        this->parserStrings(tmpStr, outarray);
+        poolString3 = outarray[0];
+        poolString4 = outarray[1];
+        poolString5 = outarray[2];
+        double vaw = 0.0;
+        double vaw2 = 0.000000;
+        auto [ptr, ec] = std::from_chars( poolString2.data(), poolString2.data() +  poolString2.size(), vaw);
+        auto [ptr2, ec2] = std::from_chars( poolString3.data(),  poolString3.data() +  poolString3.size(), vaw2);
+
+        switch(inputResult[0]) {
+            case 1:
+                if( (ec == std::errc{}) && (ptr ==  poolString4.data() +  poolString4.size())) {
+                    if ((ec2 == std::errc{}) && (ptr2 ==  poolString5.data() +  poolString5.size())) {
+                        auto val = doubleMap.get(poolString3);
+                        val.type = 0; val.num = vaw + vaw2;
+                        doubleMap.put(poolString3, val);
+                    }
+                }
+                return 0;
+                break;
+            case 2:
+                if( (ec == std::errc{}) && (ptr ==  poolString4.data() +  poolString4.size())) {
+                    if ((ec2 == std::errc{}) && (ptr2 ==  poolString5.data() +  poolString5.size())) {
+                        auto val = doubleMap.get(poolString3);
+                        val.type = 0; val.num = vaw - vaw2;
+                        doubleMap.put(poolString3, val);
+                    }
+                }
+                return 0;
+                break;
+            default:
+                return 1;
+                break;
+        }
+        return 0;
+    }
+
+    void compileFunc(std::string_view inputResult) {
+        //Это должно быть в so: один для компиляции, другой для выполнения.
+        bool breakInFor = false;
+        auto bytes = inputResult.data();
+        std::string OpType, OpCode, firstArgument, secondArgument, thirdArgument;
+        std::string tmpStrings[3];
+         this->parserStrings(std::string(inputResult), tmpStrings);
+         OpCode = tmpStrings[0];
+         OpType = tmpStrings[1];
+         firstArgument = tmpStrings[2];
+
+             switch(calculateHashRun(OpCode)) {
+            case calculateHash("op"):
+            switch(calculateHashRun(OpType)) {
+                case calculateHash("add"):
+                case calculateHash("mul"):
+                case calculateHash("sub"):
+                case calculateHash("div"):
+                    std::string tmpString;
+                    this->parserStrings(firstArgument, tmpStrings);
+                    firstArgument = tmpStrings[0];
+                    secondArgument = tmpStrings[1];
+                    thirdArgument = tmpStrings[2];
+                    tmpString += "1";
+                    tmpString += "$";
+                    tmpString += "1"; //Тип операции не важен, главное что оно принимает 3 аргумента.
+                    tmpString += "$";
+                    tmpString += firstArgument;
+                    tmpString += "$";
+                    tmpString += secondArgument;
+                    tmpString += "$";
+                    tmpString += thirdArgument;
+                break;
+            }
+                break;
+
+        }
+
+
+    }
     void exec(std::string lines) {
         poolString.clear();
         poolString2.clear();
+        poolString3.clear();
+        poolString4.clear();
+        poolString5.clear();
+        if(lines.data()[0] == 31) {
+            std::string_view www = lines; www.remove_prefix(1);
+             if(   operatLogic(www) == 0) return;
+
+        }
 
         const char* bytes = lines.c_str();
         int i = 0;
@@ -588,7 +709,7 @@ class parser {
         for(int l = 0; i < lines.length(); i++) {
             auto b = bytes[i];
             if (b == 32) {
-          //  i++;
+            i++;
             poolString  = lines.substr(0, l);
             break;
             }
@@ -610,13 +731,13 @@ class parser {
          if (b == 10) {
              break;
          }
-         poolString2 += b;
+         poolString4 += b;
      }
 
       auto resultA = OQmap.get(poolString);
       if(resultA) {
          // arc::util::Log::log(" " + poolString + " " + poolString2);
-            resultA(poolString2);
+            resultA(poolString4);
             return;
             } else {
         //  if(doubleMap.contains(poolString)) return;
@@ -651,9 +772,10 @@ class parser {
            }
            buffer[input] = '\0';
            std::string tmpString(buffer, 0, input - 1);
-if(tmpString == "#") {
+    if(tmpString == "#") {
     isRunning = !isRunning;
-}
+
+    }
 
           if (buffer[input - 1] != 8) {
                line = tmpString;
@@ -663,9 +785,9 @@ if(tmpString == "#") {
            std::memcpy(WWWLineBuffer, line.c_str(), line.length());
            SizeWWWLineBuffer = line.length();
        } else SizeWWWLineBuffer = 0;
-       sleep(0.01);
-   }
-});
+       usleep(1000);
+        }
+    });
     std::ios::sync_with_stdio(false);
     std::string line;
     parser p;
@@ -675,36 +797,30 @@ if(tmpString == "#") {
      arc::util::Log::log("<MLog>");
     while(true) {
          while(true) {
-            // if(canEditWWWLine1) {
+
                  std::string tmpString(WWWLineBuffer, SizeWWWLineBuffer);
                  SizeWWWLineBuffer = 0;
-             //}
 
-          /*       if (tmpString == "#") {
-                     if (running) {
-                      running = false;
-                    } else running = true;
-                     break;
-                 } */
+
                  if (tmpString != "") {
 
                      if (tmpString == "start") {
 
-                         int code = p.start();
-                         if (code == 0)
-                        seq.clear();
-                        break;
-                     }
-                    p.add(tmpString);
-                 } else if (isRunning) {
-                p.start();
+                              int code = p.start();
+                              if (code == 0)
+                              seq.clear();
+                               break;
+                          }
+                      p.add(tmpString);
+                      } else if (isRunning) {
+                   p.start();
 
-                } else
-                usleep(0.001);
+                 } else
+                   usleep(1000);
+         }
+         arc::util::Log::log("<MLog>");
         }
-        arc::util::Log::log("<MLog>");
+     return 0;
     }
-  return 0;
-}
 
 
