@@ -18,6 +18,9 @@
 #include <cstdint>
 #include <string>
 #include <cstring>
+/*Зачем я пишу проект на С++? Мне надо расти в IT и как личность, но при этом я могу натворить дел так, что у меня весь Си
+ будет вайбкодиться. Поэтому, я не перейду на rust пока.
+  */
 struct Var {
     int type = 0; //0 Это num, 1 это str. bool это int. 2 ЭтоМаркер?
     std::string str = "";
@@ -80,7 +83,7 @@ class parser {
     for(int w = 0; i < inputResult.length(); i++) {
         auto charB = bytes[i];
         switch(charB) {
-
+            case 36:
             case 32:
 
                 i++;
@@ -120,6 +123,7 @@ class parser {
             case 0:
                 w++;
                 break;
+            case 36:
             case 32:
 
                 i++;
@@ -402,10 +406,6 @@ class parser {
                      isString = true;
                      break;
                  }
-
-
-
-
             }
             if(!isString) {
                 if(doubleMap.get(result2A).type == 0) {
@@ -607,7 +607,8 @@ class parser {
     }
     void add(std::string line) {
         if(line != "") {
-            seq.add(line);
+            compileFunc(line);
+           // seq.add(line);
         }
     }
     int operatLogic(std::string_view inputResult) { //Этот метод хорошо бы в so перенести, чтобы на лету менять команды.
@@ -615,49 +616,173 @@ class parser {
         auto* outarray = new std::string[3];
         std::string tmpStr(inputResult);
         this->parserStrings(tmpStr, outarray);
-        poolString3 = outarray[0];
-        poolString4 = outarray[1];
-        poolString5 = outarray[2];
-        double vaw = 0.0;
-        double vaw2 = 0.000000;
-        auto [ptr, ec] = std::from_chars( poolString2.data(), poolString2.data() +  poolString2.size(), vaw);
-        auto [ptr2, ec2] = std::from_chars( poolString3.data(),  poolString3.data() +  poolString3.size(), vaw2);
+        poolString = outarray[0];
+        poolString2 = outarray[1];
+        poolString3 = outarray[2];
 
         switch(inputResult[0]) {
-            case 1:
-                if( (ec == std::errc{}) && (ptr ==  poolString4.data() +  poolString4.size())) {
-                    if ((ec2 == std::errc{}) && (ptr2 ==  poolString5.data() +  poolString5.size())) {
-                        auto val = doubleMap.get(poolString3);
-                        val.type = 0; val.num = vaw + vaw2;
-                        doubleMap.put(poolString3, val);
+            case 49:
+                switch(inputResult[2]) {
+                    case 49: {
+                        this->parserStrings(poolString3, outarray);
+                        poolString3 = outarray[0];
+                        poolString4 = outarray[1];
+                        poolString5 = outarray[2];
+                        double vaw = 0.0;
+                        double vaw2 = 0.000000;
+                        auto [ptr, ec] = std::from_chars(poolString4.data(),
+                                                         poolString4.data() + poolString4.size(),
+                                                         vaw);
+                        auto [ptr2, ec2] = std::from_chars(poolString5.data(),
+                                                           poolString5.data() + poolString5.size(),
+                                                           vaw2);
+                        if ((ec == std::errc{}) &&
+                            (ptr == poolString4.data() + poolString4.size())) {
+                            if ((ec2 == std::errc{}) &&
+                                (ptr2 == poolString5.data() + poolString5.size())) {
+                                auto val = doubleMap.get(poolString3);
+                                val.type = 0;
+                                val.num = vaw + vaw2;
+                                doubleMap.put(poolString3, val);
+
+                            } else  {
+                                auto val =doubleMap.get(poolString5);
+                                val.type = 0; val.num = vaw - val.num;
+                                doubleMap.put(poolString3, val);
+                            }
+                        } else  {
+                            auto val = doubleMap.get(poolString4);
+                            if(val.type == 1) {
+                                return 0;
+                            }
+
+                            if(ec2 != std::errc{}) {
+                                auto val2 = doubleMap.get(poolString5);
+                                if(val2.type == 0) vaw2 = val2.num;
+                            }
+                            val.num = val.num + vaw2;
+                            doubleMap.put(poolString3, val);
+                        }
+                        return 0;
+                    }
+                        break;
+                    case 50: {
+                        this->parserStrings(poolString3, outarray);
+                        poolString3 = outarray[0];
+                        poolString4 = outarray[1];
+                        poolString5 = outarray[2];
+                        double vaw = 0.0;
+                        double vaw2 = 0.000000;
+                        auto [ptr, ec] = std::from_chars(poolString4.data(),
+                                                         poolString4.data() + poolString4.size(),
+                                                         vaw);
+                        auto [ptr2, ec2] = std::from_chars(poolString5.data(),
+                                                           poolString5.data() + poolString5.size(),
+                                                           vaw2);
+                        if ((ec == std::errc{}) &&
+                            (ptr == poolString4.data() + poolString4.size())) {
+                            if ((ec2 == std::errc{}) &&
+                                (ptr2 == poolString5.data() + poolString5.size())) {
+                                auto val = doubleMap.get(poolString3);
+                                val.type = 0;
+                                val.num = vaw - vaw2;
+                                doubleMap.put(poolString3, val);
+                            } else  {
+                                auto val =doubleMap.get(poolString5);
+                                val.type = 0; val.num = vaw - val.num;
+                                doubleMap.put(poolString3, val);
+                            }
+                        } else  {
+                            auto val = doubleMap.get(poolString4);
+                            if(val.type == 1) {
+                                return 0;
+                            }
+
+                            if(ec2 != std::errc{}) {
+                                 auto val2 = doubleMap.get(poolString5);
+                                if(val2.type == 0) vaw2 = val2.num;
+                            }
+                            val.num = val.num - vaw2;
+                            doubleMap.put(poolString3, val);
+                        }
+                        return 0;
+                    }
+                        break;
+
+                    default:
+                        arc::util::Log::log("Символ не найден:" + std::string(1, inputResult[0]));
+                        break;
+                }
+                break;
+            case 50: {
+                std::string tmpStringWWW = poolString2 + poolString3;
+                auto bytes = tmpStringWWW.c_str();
+                std::string result2A, result2;
+                auto b = bytes[0];
+                int l = 0;
+                bool isString = false;
+                for (int i = 0; i < tmpStringWWW.length(); i++) {
+                    b = bytes[i];
+                    if (b == 34) {
+                        l++;
+                    } else if(b != 34) result2A += b;
+                    if (l == 2) {
+                        isString = true;
+                        break;
                     }
                 }
-                return 0;
-                break;
-            case 2:
-                if( (ec == std::errc{}) && (ptr ==  poolString4.data() +  poolString4.size())) {
-                    if ((ec2 == std::errc{}) && (ptr2 ==  poolString5.data() +  poolString5.size())) {
-                        auto val = doubleMap.get(poolString3);
-                        val.type = 0; val.num = vaw - vaw2;
-                        doubleMap.put(poolString3, val);
+                if (!isString) {
+                    if (doubleMap.get(result2A).type == 0) {
+                        result2 = std::to_string(doubleMap.get(result2A).num);
+                    } else if (doubleMap.get(result2A).type == 1) {
+                        result2 = doubleMap.get(result2A).str;
                     }
-                }
-                return 0;
+                } else result2 = result2A;
+
+                arc::util::Log::info(result2);
                 break;
+
+            }
             default:
+                arc::util::Log::log("Символ не найден:" + std::string(1, inputResult[0]));
                 return 1;
                 break;
         }
+
         return 0;
+
     }
 
+    std::string helpMetodForCompileFunc(std::string inputResult, int opCode, int opType) {
+                std::string  firstArgument, secondArgument, thirdArgument;
+                std::string tmpStrings[3];
+                std::string tmpString;
+                this->parserStrings(inputResult, tmpStrings);
+                firstArgument = tmpStrings[0];
+                secondArgument = tmpStrings[1];
+                thirdArgument = tmpStrings[2];
+                tmpString += 31;
+                tmpString += std::to_string(opCode);
+                tmpString += "$";
+                tmpString += std::to_string(opType); //Операция add
+                tmpString += "$";
+                tmpString += firstArgument;
+                tmpString += "$";
+                tmpString += secondArgument;
+                tmpString += "$";
+                tmpString += thirdArgument;
+                return tmpString;
+
+    }
     void compileFunc(std::string_view inputResult) {
         //Это должно быть в so: один для компиляции, другой для выполнения.
         bool breakInFor = false;
         auto bytes = inputResult.data();
-        std::string OpType, OpCode, firstArgument, secondArgument, thirdArgument;
+
+        std::string OpType, OpCode, firstArgument, secondArgument, thirdArgument, outputString;
         std::string tmpStrings[3];
-         this->parserStrings(std::string(inputResult), tmpStrings);
+        std::string tmpSTRINGW(inputResult);
+         this->parserStrings(tmpSTRINGW, tmpStrings);
          OpCode = tmpStrings[0];
          OpType = tmpStrings[1];
          firstArgument = tmpStrings[2];
@@ -666,30 +791,28 @@ class parser {
             case calculateHash("op"):
             switch(calculateHashRun(OpType)) {
                 case calculateHash("add"):
+                    outputString = helpMetodForCompileFunc(firstArgument, 1, 1);
+                    break;
                 case calculateHash("mul"):
+                    outputString = helpMetodForCompileFunc(firstArgument, 1, 3);
+                    break;
                 case calculateHash("sub"):
+                    outputString = helpMetodForCompileFunc(firstArgument, 1, 2);
+                    break;
                 case calculateHash("div"):
-                    std::string tmpString;
-                    this->parserStrings(firstArgument, tmpStrings);
-                    firstArgument = tmpStrings[0];
-                    secondArgument = tmpStrings[1];
-                    thirdArgument = tmpStrings[2];
-                    tmpString += "1";
-                    tmpString += "$";
-                    tmpString += "1"; //Тип операции не важен, главное что оно принимает 3 аргумента.
-                    tmpString += "$";
-                    tmpString += firstArgument;
-                    tmpString += "$";
-                    tmpString += secondArgument;
-                    tmpString += "$";
-                    tmpString += thirdArgument;
+                    outputString = helpMetodForCompileFunc(firstArgument, 1, 4);
                 break;
             }
                 break;
+                 case calculateHash("print"):
+                     outputString = static_cast<char>(31);
+                     outputString +=  "2";
+                     outputString +=   "$" +  OpType + firstArgument;
 
+                     break;
         }
 
-
+       seq.add(outputString);
     }
     void exec(std::string lines) {
         poolString.clear();
@@ -702,7 +825,11 @@ class parser {
              if(   operatLogic(www) == 0) return;
 
         }
-
+       /* poolString.clear();
+        poolString2.clear();
+        poolString3.clear();
+        poolString4.clear();
+        poolString5.clear();
         const char* bytes = lines.c_str();
         int i = 0;
         int ww = 0;
@@ -741,10 +868,10 @@ class parser {
             return;
             } else {
         //  if(doubleMap.contains(poolString)) return;
-            arc::util::Log::warn("Неизвестная команда: "+poolString);
+            arc::util::Log::warn("Неизвестная команда: "+poolString + "/Size" + std::to_string(poolString.length()));
             return;
         }
-        return;
+        return; */
     };
 
 };
