@@ -17,6 +17,11 @@ namespace arc::structures {
 int lastUse = 0;
     public:
         bool replace = true;
+        K operator[](size_t index) {
+            if(index >= length) return K{};
+            if(key == nullptr) return K{};
+            return key[index];
+        }
         void resize(int size) {
 
 

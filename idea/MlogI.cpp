@@ -21,6 +21,39 @@
 /*Зачем я пишу проект на С++? Мне надо расти в IT и как личность, но при этом я могу натворить дел так, что у меня весь Си
  будет вайбкодиться. Поэтому, я не перейду на rust пока.
   */
+std::size_t calculateHashRun(std::string_view object) {
+    std::uint64_t FnvBasis = 14695981039346656037ULL;
+    std::uint64_t FnvPrime = 1099511628211ULL;
+
+
+    std::uint64_t hash = FnvBasis;
+    for (char c : object) {
+        hash ^= static_cast<unsigned char>(c);
+        hash *= FnvPrime;
+    }
+    return static_cast<std::size_t>(hash);
+}
+struct Instruction {
+    int* type; // Нужен, чтобы определять тип инструкции.
+    std::size_t* cacheHashCommand;
+    std::string* command;
+    std::string* argument;
+    int* anythingMarker;
+     Instruction() {
+
+        type = new int(0);
+         cacheHashCommand = new std::size_t(0);
+        command = new std::string("");
+        argument = new std::string("");
+        anythingMarker = new int(0);
+    }
+    virtual ~Instruction() {
+     delete type;
+        delete command;
+        delete argument;
+    }
+};
+
 struct Var {
     int type = 0; //0 Это num, 1 это str. bool это int. 2 ЭтоМаркер?
     std::string str = "";
@@ -39,17 +72,7 @@ hash *= FnvPrime;
 }
 return static_cast<std::size_t>(hash);
 }
- std::size_t calculateHashRun(std::string_view object) {
- std::uint64_t FnvBasis = 14695981039346656037ULL;
- std::uint64_t FnvPrime = 1099511628211ULL;
 
-std::uint64_t hash = FnvBasis;
-for (char c : object) {
-hash ^= static_cast<unsigned char>(c);
-hash *= FnvPrime;
-}
-return static_cast<std::size_t>(hash);
-}
 static  arc::structures::ObjectMap<std::string, std::function<void(std::string&)>> OQmap;
 static    std::atomic<bool> isRunning = false;
 static std::atomic<bool> canEditWWWLine1{true};
@@ -57,7 +80,7 @@ static char* WWWLineBuffer;
 static int SizeWWWLineBuffer;
 static arc::structures::ObjectMap<std::string, Var> doubleMap;
 static arc::structures::ObjectMap<std::string, std::function<void( std::string&)>> InstructOpMap;
-static arc::structures::Seq<std::string> seq; //Команды.
+static arc::structures::Seq<Instruction*> seq; //Команды.
 static arc::structures::Seq<std::string> seqL;
 static int ipt = 0;
 static  std::string poolString, poolString2, poolString3, poolString4, poolString5;
@@ -69,7 +92,23 @@ static bool isWaitingMLog = false;
 class parser {
   public:
 
+    struct InstructionWith3Arg : public Instruction { //Как нибудь попозже займусь организацией файлов, пока так будет.
+        std::string* arg2; std::string* arg3; std::string* code;
+        std::size_t* cacheHashCode;
+       InstructionWith3Arg() {
+           cacheHashCode = new std::size_t(0);
+           *type = 1;
+           arg2 = new std::string;
+           arg3 = new std::string;
+           code = new std::string;
+       }
 
+        ~InstructionWith3Arg() {
+            delete arg2;
+            delete arg3;
+            delete code;
+       }
+    };
     static void  parserStrings(std::string &inputResult, std::string* output) { //Я добавил этот метод для расширения op.
    // std::string result, result2, result3;
      //arc::util::Log::info(inputResult);
@@ -174,164 +213,6 @@ class parser {
      void init() {
 
         doubleMap.replace = true;
-         InstructOpMap.put("sub", [](std::string &inputResult) {
-             poolString.clear();
-             poolString2.clear();
-             poolString3.clear();
-
-             int i = 0;
-             bool breakInFor = false;
-             parser parserw;
-             std::string tmpStrings[3];
-             parserw.parserStrings(inputResult, tmpStrings);
-             poolString = tmpStrings[0];
-             poolString2 = tmpStrings[1];
-             poolString3 = tmpStrings[2];
-             double vaw = 0.0;
-             double vaw2 = 0.000000;
-             auto [ptr, ec] = std::from_chars( poolString2.data(), poolString2.data() +  poolString2.size(), vaw);
-             auto [ptr2, ec2] = std::from_chars( poolString3.data(),  poolString3.data() +  poolString3.size(), vaw2);
-
-             Var v = doubleMap.get(poolString);
-             if( (ec == std::errc{}) && (ptr ==  poolString2.data() +  poolString2.size())) {
-                 if ((ec2 == std::errc{}) && (ptr2 ==  poolString3.data() +  poolString3.size())) {
-                     v.num = vaw - vaw2;
-                     doubleMap.put( poolString, v);
-
-
-                 } else if(doubleMap.contains( poolString3)) {
-                     v = doubleMap.get( poolString3);
-                     if(v.type == 1) {
-                         return;
-                     }
-
-                     v.num = vaw - v.num;
-                     doubleMap.put( poolString, v);
-                 } else   {
-                     auto v =  doubleMap.get( poolString3);
-                     v.num = vaw;
-                     doubleMap.put( poolString, v);
-                 }
-
-             } else if(doubleMap.contains( poolString2)) {
-                 v = doubleMap.get( poolString2);
-                 if(v.type == 1) {
-                     return;
-                 }
-
-                 v.num =  v.num - ((ec2 == std::errc{}) ? vaw2 : doubleMap.get( poolString3).num) ;
-                 doubleMap.put( poolString, v);
-             } else   {
-                 auto v =  doubleMap.get( poolString2);  //создание временного объекта.
-                 v.num -= (ec2 == std::errc{}) ? vaw2 : doubleMap.get( poolString3).num; //Идёт сама операция сложения: если poolString3 не смог преобразаваться, то берётся из карты значение.
-                 doubleMap.put( poolString, v);
-             }
-         });
-         InstructOpMap.put("div", [](std::string &inputResult) {
-             poolString.clear();
-             poolString2.clear();
-             poolString3.clear();
-             int i = 0;
-             bool breakInFor = false;
-             parser parserw;
-             std::string tmpStrings[3];
-             parserw.parserStrings(inputResult, tmpStrings);
-             poolString = tmpStrings[0];
-             poolString2 = tmpStrings[1];
-             poolString3 = tmpStrings[2];
-             double vaw = 0.0;
-             double vaw2 = 0.000000;
-             auto [ptr, ec] = std::from_chars( poolString2.data(),  poolString2.data() +  poolString2.size(), vaw);
-             auto [ptr2, ec2] = std::from_chars( poolString3.data(),  poolString3.data() +  poolString3.size(), vaw2);
-
-             Var v = doubleMap.get( poolString3);
-             if( (ec == std::errc{}) && (ptr ==  poolString2.data() +  poolString2.size())) {
-                 if ((ec2 == std::errc{}) && (ptr2 ==  poolString3.data() +  poolString3.size())) {
-                     v.num = vaw / vaw2;
-                     doubleMap.put(poolString, v);
-
-
-                 } else if(doubleMap.contains( poolString3)) {
-                     v = doubleMap.get(poolString3);
-                     if(v.type == 1) {
-                         return;
-                     }
-
-                     v.num = vaw / v.num;
-                     doubleMap.put(poolString, v);
-                 } else   {
-                     auto v =  doubleMap.get(poolString3);
-                     v.num = vaw;
-                     doubleMap.put(poolString, v);
-                 }
-
-             } else if(doubleMap.contains(poolString2)) {
-                 v = doubleMap.get(poolString2);
-                 if(v.type == 1) {
-                     return;
-                 }
-
-                 v.num =  v.num / ((ec2 == std::errc{}) ? vaw2 : doubleMap.get(poolString3).num);
-                 doubleMap.put(poolString, v);
-             } else   {
-                 auto v =  doubleMap.get(poolString2);  //создание временного объекта.
-                 v.num /= (ec2 == std::errc{}) ? vaw2 : doubleMap.get(poolString3).num; //Идёт сама операция сложения: если poolString3 не смог преобразаваться, то берётся из карты значение.
-                 doubleMap.put(poolString, v);
-             }
-         });
-         InstructOpMap.put("mul", [](std::string &inputResult) {
-             poolString.clear();
-             poolString2.clear();
-             poolString3.clear();
-
-             int i = 0;
-             bool breakInFor = false;
-             parser parserw;
-             std::string tmpStrings[3];
-             parserw.parserStrings(inputResult, tmpStrings);
-             poolString = tmpStrings[0];
-             poolString2 = tmpStrings[1];
-             poolString3 = tmpStrings[2];
-             double vaw = 0.0;
-             double vaw2 = 0.000000;
-             auto [ptr, ec] = std::from_chars(poolString2.data(), poolString2.data() + poolString2.size(), vaw);
-             auto [ptr2, ec2] = std::from_chars(poolString3.data(), poolString3.data() + poolString3.size(), vaw2);
-
-             Var v = doubleMap.get(poolString);
-             if( (ec == std::errc{}) && (ptr == poolString2.data() + poolString2.size())) {
-                 if ((ec2 == std::errc{}) && (ptr2 == poolString3.data() + poolString3.size())) {
-                     v.num = vaw * vaw2;
-                     doubleMap.put(poolString, v);
-
-
-                 } else if(doubleMap.contains(poolString3)) {
-                     v = doubleMap.get(poolString3);
-                     if(v.type == 1) {
-                         return;
-                     }
-
-                     v.num = vaw * v.num;
-                     doubleMap.put(poolString, v);
-                 } else   {
-                     auto v =  doubleMap.get(poolString3);
-                     v.num = vaw;
-                     doubleMap.put(poolString, v);
-                 }
-
-             } else if(doubleMap.contains(poolString2)) {
-                 v = doubleMap.get(poolString2);
-                 if(v.type == 1) {
-                     return;
-                 }
-
-                 v.num = ((ec2 == std::errc{}) ? vaw2 : doubleMap.get(poolString3).num) * v.num;
-                 doubleMap.put(poolString, v);
-             } else   {
-                 auto v =  doubleMap.get(poolString2);  //создание временного объекта.
-                 v.num *= (ec2 == std::errc{}) ? vaw2 : doubleMap.get(poolString3).num; //Идёт сама операция сложения: если result3 не смог преобразаваться, то берётся из карты значение.
-                 doubleMap.put(poolString, v);
-             }
-         });
         InstructOpMap.put("add", [](std::string &inputResult) {
 
           poolString.clear();
@@ -586,17 +467,16 @@ class parser {
         for(int w = 0; stepCounter < seq.totalSpace; w) {
             if (ipt < 10000) {
 
-                std::string tmpString = "";
-                tmpString = seq.get(stepCounter);
-                if (tmpString != "") {
+                Instruction* tmpInstruct = seq.get(stepCounter);
 
-                    p.exec(tmpString);
+
+                    p.exec(tmpInstruct);
                     if(isWaitingMLog) {
 
 
                         return 1;
                     }
-                }
+
                 stepCounter++;
                 ipt++;
             } else break;
@@ -611,141 +491,118 @@ class parser {
            // seq.add(line);
         }
     }
-    int operatLogic(std::string_view inputResult) { //Этот метод хорошо бы в so перенести, чтобы на лету менять команды.
+    int operatLogic(Instruction* inputResult) { //Этот метод хорошо бы в so перенести, чтобы на лету менять команды.
         //1 это операция сложения.
-        auto* outarray = new std::string[3];
-        std::string tmpStr(inputResult);
-        this->parserStrings(tmpStr, outarray);
-        poolString = outarray[0];
-        poolString2 = outarray[1];
-        poolString3 = outarray[2];
 
-        switch(inputResult[0]) {
-            case 49:
-                switch(inputResult[2]) {
-                    case 49: {
-                        this->parserStrings(poolString3, outarray);
-                        poolString3 = outarray[0];
-                        poolString4 = outarray[1];
-                        poolString5 = outarray[2];
-                        double vaw = 0.0;
-                        double vaw2 = 0.000000;
-                        auto [ptr, ec] = std::from_chars(poolString4.data(),
-                                                         poolString4.data() + poolString4.size(),
-                                                         vaw);
-                        auto [ptr2, ec2] = std::from_chars(poolString5.data(),
-                                                           poolString5.data() + poolString5.size(),
-                                                           vaw2);
-                        if ((ec == std::errc{}) &&
-                            (ptr == poolString4.data() + poolString4.size())) {
-                            if ((ec2 == std::errc{}) &&
-                                (ptr2 == poolString5.data() + poolString5.size())) {
-                                auto val = doubleMap.get(poolString3);
-                                val.type = 0;
-                                val.num = vaw + vaw2;
-                                doubleMap.put(poolString3, val);
 
-                            } else  {
-                                auto val =doubleMap.get(poolString5);
-                                val.type = 0; val.num = vaw - val.num;
-                                doubleMap.put(poolString3, val);
-                            }
-                        } else  {
-                            auto val = doubleMap.get(poolString4);
-                            if(val.type == 1) {
-                                return 0;
-                            }
 
-                            if(ec2 != std::errc{}) {
-                                auto val2 = doubleMap.get(poolString5);
-                                if(val2.type == 0) vaw2 = val2.num;
-                            }
-                            val.num = val.num + vaw2;
-                            doubleMap.put(poolString3, val);
-                        }
-                        return 0;
+        switch(*inputResult->type) {
+            case 0:
+                switch(*inputResult->cacheHashCommand) {
+                    case calculateHash("print"): {
+                        if(*inputResult->anythingMarker == 0) {
+                             auto input = doubleMap.get(*inputResult->argument);
+                             if(input.type == 0) {
+                                 arc::util::Log::log(std::to_string(input.num));
+                             } else
+                             arc::util::Log::log(input.str);
+                        } else arc::util::Log::log(*inputResult->argument);
+                        break;
                     }
-                        break;
-                    case 50: {
-                        this->parserStrings(poolString3, outarray);
-                        poolString3 = outarray[0];
-                        poolString4 = outarray[1];
-                        poolString5 = outarray[2];
-                        double vaw = 0.0;
-                        double vaw2 = 0.000000;
-                        auto [ptr, ec] = std::from_chars(poolString4.data(),
-                                                         poolString4.data() + poolString4.size(),
-                                                         vaw);
-                        auto [ptr2, ec2] = std::from_chars(poolString5.data(),
-                                                           poolString5.data() + poolString5.size(),
-                                                           vaw2);
-                        if ((ec == std::errc{}) &&
-                            (ptr == poolString4.data() + poolString4.size())) {
-                            if ((ec2 == std::errc{}) &&
-                                (ptr2 == poolString5.data() + poolString5.size())) {
-                                auto val = doubleMap.get(poolString3);
-                                val.type = 0;
-                                val.num = vaw - vaw2;
-                                doubleMap.put(poolString3, val);
-                            } else  {
-                                auto val =doubleMap.get(poolString5);
-                                val.type = 0; val.num = vaw - val.num;
-                                doubleMap.put(poolString3, val);
-                            }
-                        } else  {
-                            auto val = doubleMap.get(poolString4);
-                            if(val.type == 1) {
-                                return 0;
-                            }
-
-                            if(ec2 != std::errc{}) {
-                                 auto val2 = doubleMap.get(poolString5);
-                                if(val2.type == 0) vaw2 = val2.num;
-                            }
-                            val.num = val.num - vaw2;
-                            doubleMap.put(poolString3, val);
-                        }
-                        return 0;
-                    }
-                        break;
-
-                    default:
-                        arc::util::Log::log("Символ не найден:" + std::string(1, inputResult[0]));
-                        break;
-                }
-                break;
-            case 50: {
-                std::string tmpStringWWW = poolString2 + poolString3;
-                auto bytes = tmpStringWWW.c_str();
-                std::string result2A, result2;
-                auto b = bytes[0];
-                int l = 0;
-                bool isString = false;
-                for (int i = 0; i < tmpStringWWW.length(); i++) {
-                    b = bytes[i];
-                    if (b == 34) {
-                        l++;
-                    } else if(b != 34) result2A += b;
-                    if (l == 2) {
-                        isString = true;
+                    case calculateHash("end"): {
+                        stepCounter = -1; //Костыль.
                         break;
                     }
                 }
-                if (!isString) {
-                    if (doubleMap.get(result2A).type == 0) {
-                        result2 = std::to_string(doubleMap.get(result2A).num);
-                    } else if (doubleMap.get(result2A).type == 1) {
-                        result2 = doubleMap.get(result2A).str;
-                    }
-                } else result2 = result2A;
-
-                arc::util::Log::info(result2);
                 break;
+            case 1:
+                InstructionWith3Arg* instruct = static_cast<InstructionWith3Arg*>(inputResult);
+                switch (*instruct->cacheHashCommand) {
+                    case calculateHash("op"):
+                        switch(calculateHashRun(*instruct->code)) {
+                            case calculateHash("add"): {
+                                double vaw = 0.0;
+                                double vaw2 = 0.000000;
+                                auto [ptr, ec] = std::from_chars((*instruct->arg2).data(),
+                                                                 (*instruct->arg2).data() + (*instruct->arg2).size(),
+                                                                 vaw);
+                                auto [ptr2, ec2] = std::from_chars((*instruct->arg3).data(),
+                                                                   (*instruct->arg3).data() + (*instruct->arg3).size(),
+                                                                   vaw2);
+                                if ((ec == std::errc{}) &&
+                                    (ptr == (*instruct->arg2).data() + (*instruct->arg2).size())) {
+                                    if ((ec2 == std::errc{}) &&
+                                        (ptr2 == (*instruct->arg3).data() + (*instruct->arg3).size())) {
+                                        auto val = doubleMap.get((*instruct->argument));
+                                        val.type = 0;
+                                        val.num = vaw + vaw2;
+                                        doubleMap.put((*instruct->argument), val);
 
-            }
-            default:
-                arc::util::Log::log("Символ не найден:" + std::string(1, inputResult[0]));
-                return 1;
+                                    } else  {
+                                        auto val =doubleMap.get((*instruct->arg3));
+                                        val.type = 0; val.num = vaw - val.num;
+                                        doubleMap.put((*instruct->argument), val);
+                                    }
+                                } else  {
+                                    auto val = doubleMap.get((*instruct->arg2));
+                                    if(val.type == 1) {
+                                        return 0;
+                                    }
+
+                                    if(ec2 != std::errc{}) {
+                                        auto val2 = doubleMap.get((*instruct->arg3));
+                                        if(val2.type == 0) vaw2 = val2.num;
+                                    }
+                                    val.num = val.num + vaw2;
+                                    doubleMap.put((*instruct->argument), val);
+                                }
+                                return 0;
+                            }
+                                break;
+                            case  calculateHash("sub"): {
+
+                                double vaw = 0.0;
+                                double vaw2 = 0.000000;
+                                auto [ptr, ec] = std::from_chars((*instruct->arg2).data(),
+                                                                 (*instruct->arg2).data() + (*instruct->arg2).size(),
+                                                                 vaw);
+                                auto [ptr2, ec2] = std::from_chars((*instruct->arg3).data(),
+                                                                   (*instruct->arg3).data() + (*instruct->arg3).size(),
+                                                                   vaw2);
+                                if ((ec == std::errc{}) &&
+                                    (ptr == (*instruct->arg2).data() + (*instruct->arg2).size())) {
+                                    if ((ec2 == std::errc{}) &&
+                                        (ptr2 == (*instruct->arg3).data() + (*instruct->arg3).size())) {
+                                        auto val = doubleMap.get((*instruct->argument));
+                                        val.type = 0;
+                                        val.num = vaw - vaw2;
+                                        doubleMap.put((*instruct->argument), val);
+                                    } else  {
+                                        auto val =doubleMap.get((*instruct->arg3));
+                                        val.type = 0; val.num = vaw - val.num;
+                                        doubleMap.put((*instruct->argument), val);
+                                    }
+                                } else  {
+                                    auto val = doubleMap.get((*instruct->arg2));
+                                    if(val.type == 1) {
+                                        return 0;
+                                    }
+
+                                    if(ec2 != std::errc{}) {
+                                        auto val2 = doubleMap.get((*instruct->arg3));
+                                        if(val2.type == 0) vaw2 = val2.num;
+                                    }
+                                    val.num = val.num - vaw2;
+                                    doubleMap.put((*instruct->argument), val);
+                                }
+                                return 0;
+                            }
+                                break;
+
+                        }
+                        break;
+
+                }
                 break;
         }
 
@@ -753,78 +610,115 @@ class parser {
 
     }
 
-    std::string helpMetodForCompileFunc(std::string inputResult, int opCode, int opType) {
+            InstructionWith3Arg* helpMetodForCompileFunc(std::string inputResult) {
                 std::string  firstArgument, secondArgument, thirdArgument;
                 std::string tmpStrings[3];
                 std::string tmpString;
                 this->parserStrings(inputResult, tmpStrings);
-                firstArgument = tmpStrings[0];
-                secondArgument = tmpStrings[1];
-                thirdArgument = tmpStrings[2];
-                tmpString += 31;
-                tmpString += std::to_string(opCode);
-                tmpString += "$";
-                tmpString += std::to_string(opType); //Операция add
-                tmpString += "$";
-                tmpString += firstArgument;
-                tmpString += "$";
-                tmpString += secondArgument;
-                tmpString += "$";
-                tmpString += thirdArgument;
-                return tmpString;
+                auto* inst = new InstructionWith3Arg();
+                *inst->argument = tmpStrings[0];
+                *inst->arg2 = tmpStrings[1];
+                *inst->arg3 = tmpStrings[2];
+                return inst;
 
     }
     void compileFunc(std::string_view inputResult) {
         //Это должно быть в so: один для компиляции, другой для выполнения.
         bool breakInFor = false;
         auto bytes = inputResult.data();
-
-        std::string OpType, OpCode, firstArgument, secondArgument, thirdArgument, outputString;
         std::string tmpStrings[3];
-        std::string tmpSTRINGW(inputResult);
-         this->parserStrings(tmpSTRINGW, tmpStrings);
-         OpCode = tmpStrings[0];
-         OpType = tmpStrings[1];
-         firstArgument = tmpStrings[2];
+        std::string OpType, OpCode, firstArgument, secondArgument, thirdArgument, outputString, tmpStringWW;
+        tmpStringWW = inputResult;
+        this->parserStrings(tmpStringWW, tmpStrings);
+        OpCode = tmpStrings[0];
+        OpType = tmpStrings[1];
+        firstArgument = tmpStrings[2];
 
              switch(calculateHashRun(OpCode)) {
             case calculateHash("op"):
             switch(calculateHashRun(OpType)) {
-                case calculateHash("add"):
-                    outputString = helpMetodForCompileFunc(firstArgument, 1, 1);
+                case calculateHash("add"): {
+                    InstructionWith3Arg *instu = helpMetodForCompileFunc(firstArgument);
+                    *instu->command = "op";
+                    *instu->code = "add";
+                    *instu->cacheHashCommand = calculateHashRun(*instu->command);
+                    *instu->cacheHashCode = calculateHashRun(*instu->code);
+                    seq.add(instu);
                     break;
-                case calculateHash("mul"):
-                    outputString = helpMetodForCompileFunc(firstArgument, 1, 3);
+                }
+                case calculateHash("mul"): {
+                    InstructionWith3Arg *instu = helpMetodForCompileFunc(firstArgument);
+                    *instu->command = "op";
+                    *instu->code = "mul";
+                    *instu->cacheHashCommand = calculateHashRun(*instu->command);
+                    *instu->cacheHashCode = calculateHashRun(*instu->code);
+                    seq.add(instu);
                     break;
-                case calculateHash("sub"):
-                    outputString = helpMetodForCompileFunc(firstArgument, 1, 2);
+                }
+                case calculateHash("sub"): {
+                    InstructionWith3Arg *instu = helpMetodForCompileFunc(firstArgument);
+                    *instu->command = "op";
+                    *instu->code = "sub";
+                    *instu->cacheHashCommand = calculateHashRun(*instu->command);
+                    *instu->cacheHashCode = calculateHashRun(*instu->code);
+                    seq.add(instu);
                     break;
-                case calculateHash("div"):
-                    outputString = helpMetodForCompileFunc(firstArgument, 1, 4);
-                break;
+                }
+                case calculateHash("div"): {
+                    InstructionWith3Arg *instu = helpMetodForCompileFunc(firstArgument);
+                    *instu->command = "op";
+                    *instu->code = "div";
+                    *instu->cacheHashCommand = calculateHashRun(*instu->command);
+                    *instu->cacheHashCode = calculateHashRun(*instu->code);
+                    seq.add(instu);
+                    break;
+                }
             }
                 break;
-                 case calculateHash("print"):
-                     outputString = static_cast<char>(31);
-                     outputString +=  "2";
-                     outputString +=   "$" +  OpType + firstArgument;
-
+                 case calculateHash("print"): {
+                     auto *inst = new Instruction();
+                     *inst->command = "print";
+                     *inst->argument = OpType + firstArgument;
+                     *inst->cacheHashCommand = calculateHashRun(*inst->command);
+                     std::string tmpStringWWW = *inst->argument;
+                     std::uint8_t isString = 0;
+                     bool exitFor = false;
+                     for(int w = 0; w < tmpStringWWW.length(); w++) {
+                         switch(tmpStringWWW[w]) {
+                             case 34:
+                                 isString++;
+                                 if(isString == 2) {
+                                     *inst->type = 1; //1 означает, что там есть кавычки.
+                                 }
+                                 exitFor = true;
+                                 break;
+                         }
+                         if(exitFor) break;
+                     }
+                     seq.add(inst);
                      break;
+                 }
+                 case calculateHash("end"): {
+                     auto  *inst = new Instruction();
+                     *inst->command = "end";
+                     *inst->cacheHashCommand = calculateHashRun(*inst->command);
+                     seq.add(inst);
+                     break;
+                 }
+
         }
 
-       seq.add(outputString);
     }
-    void exec(std::string lines) {
+    void exec(Instruction* instruct) {
         poolString.clear();
         poolString2.clear();
         poolString3.clear();
         poolString4.clear();
         poolString5.clear();
-        if(lines.data()[0] == 31) {
-            std::string_view www = lines; www.remove_prefix(1);
-             if(   operatLogic(www) == 0) return;
 
-        }
+             if(   operatLogic(instruct) == 0) return;
+
+
        /* poolString.clear();
         poolString2.clear();
         poolString3.clear();

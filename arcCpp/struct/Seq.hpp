@@ -110,6 +110,14 @@ if(key >= length) return T{};
         };
 
         void clear() {
+            if(items != nullptr) {
+                if constexpr(std::is_pointer_v<T>) {
+                    for(int i = 0; i < freeSpaceI; i++) {
+                     delete items[i];
+                    }
+                }
+
+            }
             delete[] items;
             items = nullptr;
             freeSpace = nullptr;
