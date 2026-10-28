@@ -60,101 +60,143 @@ arc::util::io::Writes writes2(arrayWWWWW, 8);
  //   delete[] arrayWWWWW;
     arrayWWWWW = writes2.toBytes();
     arc::util::io::Reads reads2(arrayWWWWW, 8);
-arc::util::Log::log(reads2.str(8));
+    arc::util::Log::log(reads2.str(8));
 
 
-arc::util::Log::err("   "+std::to_string(arc::util::Log::logLevel) + " " + std::to_string( reads.i()));
-arc::util::Log::log("if you see this, logLevel dont work");
-arc::util::Log::warn("if you see this, logLevel work");
-int numSocketFile = open("/dev/shm/testWWW", O_RDONLY);
+    arc::util::Log::err("   "+std::to_string(arc::util::Log::logLevel) + " " + std::to_string( reads.i()));
+    arc::util::Log::log("if you see this, logLevel dont work");
+    arc::util::Log::warn("if you see this, logLevel work");
+    int numSocketFile = open("/dev/shm/testWWW", O_RDONLY);
 
 
-if(numSocketFile == -1) {
-    arc::util::Log::log(" WA");
+    if(numSocketFile == -1) {
+        arc::util::Log::log(" WA");
 
-} else if(numSocketFile != -1) {
-  if(  read(numSocketFile, arrayWWWWW, 8) <= 4) {
+    } else if(numSocketFile != -1) {
+    if(  read(numSocketFile, arrayWWWWW, 8) <= 4) {
 
       arc::util::io::Reads reads3(arrayWWWWW, 8);
       arc::util::Log::log(" " + std::to_string(reads3.i()));
-  }
+    }
 
-}
-close(numSocketFile);
+    }
+    close(numSocketFile);
     arc::util::Log::info(std::string(" \033[91m") + "red");
-arc::util::Log::info(arc::util::OS::userHome());
+    arc::util::Log::info(arc::util::OS::userHome());
     arc::util::Log::info(arc::util::OS::username());
     arc::util::Log::info(arc::util::OS::getPathUser());
     arc::util::Log::log(arc::util::OS::isLinux() ? "OS: Linux" : arc::util::OS::isUnix() ? "OS: Unix" : "OS: Unknown");
-arc::util::Log::info(arc::util::OS::OSVersionArchitecture());
-arc::Events::on([](){
-    arc::util::Log::info(arc::util::OS::OSVersionArchitecture() + "   1");
-}, "outputArchitecture");
+    arc::util::Log::info(arc::util::OS::OSVersionArchitecture());
     arc::Events::on([](){
-        arc::util::Log::info(arc::util::OS::OSVersionArchitecture() + "   2");
+        arc::util::Log::info(arc::util::OS::OSVersionArchitecture() + "   1");
     }, "outputArchitecture");
-arc::util::Threads::daemon("outputArchitecture", []() {
-    arc::Events::fire("outputArchitecture");
-  //  arc::Events::fire("outputArchitecture2");
-});
+        arc::Events::on([](){
+            arc::util::Log::info(arc::util::OS::OSVersionArchitecture() + "   2");
+        }, "outputArchitecture");
+    arc::util::Threads::daemon("outputArchitecture", []() {
+        arc::Events::fire("outputArchitecture");
+        //  arc::Events::fire("outputArchitecture2");
+    });
 
-SDL_Surface* surface  = SDL_LoadBMP("silicon-crucible.bmp");
-//SDL_FillRect(surface, nullptr, SDL_MapRGBA(surface->format, 255, 0, 0, 255));
+    SDL_Surface* surface  = SDL_LoadBMP("map.bmp");
+    SDL_Surface* surface2  = SDL_LoadBMP("architect.bmp");
+    SDL_Surface* surface3  = SDL_LoadBMP("energyTexture.bmp");
+    SDL_Surface* surfaceFabric  = SDL_LoadBMP("silicon-crucible.bmp");
+    SDL_Surface* surfacePlanB  = SDL_LoadBMP("planB=base.bmp");
+        //SDL_FillRect(surface, nullptr, SDL_MapRGBA(surface->format, 255, 0, 0, 255));
+    Uint32 blackKey = SDL_MapRGB(surfacePlanB->format, 0, 0, 0);
+    SDL_SetColorKey(surfacePlanB, SDL_TRUE, blackKey);
 
-SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
-SDL_FreeSurface(surface); // Поверхность больше не нужна после создания текстуры
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_Texture* texture2 = SDL_CreateTextureFromSurface(renderer, surface2);
+    SDL_Texture* texture3 = SDL_CreateTextureFromSurface(renderer, surface3);
+    SDL_Texture* textureFabric = SDL_CreateTextureFromSurface(renderer, surfaceFabric);
+    SDL_Texture* texturePlanB = SDL_CreateTextureFromSurface(renderer, surfacePlanB);
+    SDL_FreeSurface(surface); // Поверхность больше не нужна после создания текстуры
+    SDL_FreeSurface(surface2);
+    SDL_FreeSurface(surface3);
+    SDL_FreeSurface(surfaceFabric);
+    SDL_FreeSurface(surfacePlanB);
+    // 4. Задание координат и размеров для вывода текстуры
+    SDL_Rect dstRect{
+        .x = walkX, // Координата X
+        .y = walkY, // Координата Y
+        .w = 909,  // Ширина
+        .h = 677   // Высота
+    };
 
-// 4. Задание координат и размеров для вывода текстуры
-SDL_Rect dstRect{
-    .x = 0, // Координата X
-    .y = 150, // Координата Y
-    .w = 50,  // Ширина
-    .h = 50   // Высота
-};
+    SDL_Rect dstRect2{
+            .x = 0, // Координата X
+            .y = 0, // Координата Y
+            .w = 50,  // Ширина
+            .h = 50   // Высота
+    };
+    SDL_Rect dstRect3{
+            .x = 0, // Координата X
+            .y = 0, // Координата Y
+            .w = 71,  // Ширина
+            .h = 112   // Высота
+    };
+    SDL_Rect dstRectFabric{
+            .x = 0, // Координата X
+            .y = 48, // Координата Y
+            .w = 48,  // Ширина
+            .h = 48   // Высота
+    };
+    SDL_Rect dstRectPlanB{
+            .x = 0, // Координата X
+            .y = 0, // Координата Y
+            .w = 200,  // Ширина
+            .h = 200   // Высота
+    };
     while (running) {
-     //   arc::Events::fire("outputArchitecture");
-orderChar++;
-if(orderChar > 255) {
-    orderChar = 0;
-    orderTwoI = !orderTwoI;
-}
-if(orderTwoI && orderChar > 255) orderThreeI = true;
-if(orderTwoI) {
-    charTest = 256 + orderChar;
-} else if (orderThreeI) {
-    charTest = 256 + 256 + orderChar;
-} else charTest = orderChar;
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 running = false;
+                break;
+            }
+            if(event.type == SDL_KEYDOWN) {
+                switch(event.key.keysym.scancode) {
+                    case SDL_SCANCODE_W:
+                        walkY -= 1;
+                        break;
+                    case SDL_SCANCODE_S:
+                        walkY += 1;
+                        break;
+                    case SDL_SCANCODE_A:
+                        walkX -= 1;
+                        break;
+                    case SDL_SCANCODE_D:
+                        walkX += 1;
+                        break;
+                }
+
+            }
+
             }
 
 
-            }
-
-
-        numberI++;
-
-
+        dstRect.x = 0 - walkX;
+        dstRect.y = 0 - walkY;
+        dstRect2.x = 400 - walkX;
+        dstRect2.y = 400 - walkY;
+        dstRect3.x = 230 - walkX;
+        dstRect3.y = 215 - walkY;
+        dstRectFabric.x = 430 - walkX;
+        dstRectFabric.y = 100 - walkY;
+        dstRectPlanB.x = 0 - walkX;
+        dstRectPlanB.y = 170 - walkY;
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // R, G, B, A
         SDL_RenderClear(renderer);
 
 
         SDL_SetRenderDrawColor(renderer, 255, 0, 0, 150); // Красный
-      //  SDL_RenderFillRect(renderer, &rect);
 
-        if(xqr ==1) rq+=(255.0/900.0); else rq-=(255.0/900.0);
-
-        if(rq > 255) rq = 0;
-if(xqr ==1) xq++; else xq--;
-if(xq > 800) xqr = -1;
-if(xq < -1) xqr = 1;
-dstRect.y += walkY;
-dstRect.x += walkX;
-
-SDL_RenderCopy(renderer, texture, nullptr, &dstRect);
-
-
+        SDL_RenderCopy(renderer, texture, nullptr, &dstRect);
+        SDL_RenderCopy(renderer, texture2, nullptr, &dstRect2);
+        SDL_RenderCopy(renderer, texture3, nullptr, &dstRect3);
+        SDL_RenderCopy(renderer, textureFabric, nullptr, &dstRectFabric);
+        SDL_RenderCopy(renderer, texturePlanB, nullptr, &dstRectPlanB);
         SDL_RenderPresent(renderer);
 
 
@@ -168,6 +210,6 @@ SDL_RenderCopy(renderer, texture, nullptr, &dstRect);
    // delete[] arrayWWWWW;
     delete xqe; // Память освобождена
     xqe = nullptr; // Хороший тон: занулить указатель, чтобы не использовать его случайно
-delete sdltest;
+    delete sdltest;
     return 0;
 }

@@ -95,6 +95,7 @@ class parser {
     struct InstructionWith3Arg : public Instruction { //Как нибудь попозже займусь организацией файлов, пока так будет.
         std::string* arg2; std::string* arg3; std::string* code;
         std::size_t* cacheHashCode;
+        double firstArgument, secondArgument;
        InstructionWith3Arg() {
            cacheHashCode = new std::size_t(0);
            *type = 1;
@@ -519,7 +520,7 @@ class parser {
                 InstructionWith3Arg* instruct = static_cast<InstructionWith3Arg*>(inputResult);
                 switch (*instruct->cacheHashCommand) {
                     case calculateHash("op"):
-                        switch(calculateHashRun(*instruct->code)) {
+                        switch(*instruct->cacheHashCode) {
                             case calculateHash("add"): {
                                 double vaw = 0.0;
                                 double vaw2 = 0.000000;
@@ -621,7 +622,7 @@ class parser {
                 *inst->arg3 = tmpStrings[2];
                 return inst;
 
-    }
+         }
     void compileFunc(std::string_view inputResult) {
         //Это должно быть в so: один для компиляции, другой для выполнения.
         bool breakInFor = false;
@@ -689,8 +690,9 @@ class parser {
                                  isString++;
                                  if(isString == 2) {
                                      *inst->type = 1; //1 означает, что там есть кавычки.
+                                     exitFor = true;
                                  }
-                                 exitFor = true;
+
                                  break;
                          }
                          if(exitFor) break;
