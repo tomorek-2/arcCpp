@@ -95,7 +95,7 @@ class parser {
     struct InstructionWith3Arg : public Instruction { //Как нибудь попозже займусь организацией файлов, пока так будет.
         std::string* arg2; std::string* arg3; std::string* code;
         std::size_t* cacheHashCode;
-        double firstArgument, secondArgument;
+        double firstArgument, secondArgument, thirdArgument;
        InstructionWith3Arg() {
            cacheHashCode = new std::size_t(0);
            *type = 1;
@@ -501,12 +501,12 @@ class parser {
             case 0:
                 switch(*inputResult->cacheHashCommand) {
                     case calculateHash("print"): {
-                        if(*inputResult->anythingMarker == 0) {
-                             auto input = doubleMap.get(*inputResult->argument);
-                             if(input.type == 0) {
-                                 arc::util::Log::log(std::to_string(input.num));
-                             } else
-                             arc::util::Log::log(input.str);
+                        if (*inputResult->anythingMarker == 0) {
+                            auto input = doubleMap.get(*inputResult->argument);
+                            if (input.type == 0) {
+                                arc::util::Log::log(std::to_string(input.num));
+                            } else
+                                arc::util::Log::log(input.str);
                         } else arc::util::Log::log(*inputResult->argument);
                         break;
                     }
@@ -598,29 +598,63 @@ class parser {
                                 }
                                 return 0;
                             }
+                            case calculateHash("set"): {
+
+
+                                             auto val = doubleMap.get(*instruct->argument);
+                                             if(val.type == 0) { val.num = instruct->firstArgument; } else if(val.type == 1) {val.str = *instruct->arg2; }
+                                             doubleMap.put(*instruct->argument, val);
+
+
+                                break;
+                            }
                                 break;
 
                         }
                         break;
+                    case calculateHash("set"): {
 
+
+                        auto val = doubleMap.get(*instruct->argument);
+                        if(val.type == 0) { val.num = instruct->firstArgument; } else if(val.type == 1) {val.str = *instruct->arg2; }
+                        doubleMap.put(*instruct->argument, val);
+
+
+                        break;
+                    }
                 }
-                break;
+             break;
         }
 
         return 0;
 
     }
+    double stringToDouble(const std::string& str) {
+        double result = 0.0;
 
+
+        auto [ptr, ec] = std::from_chars(str.data(), str.data() + str.size(), result);
+
+
+        if (ec == std::errc{} && ptr == str.data() + str.size()) {
+            return result;
+        }
+        return 0.0;
+    }
             InstructionWith3Arg* helpMetodForCompileFunc(std::string inputResult) {
                 std::string  firstArgument, secondArgument, thirdArgument;
                 std::string tmpStrings[3];
                 std::string tmpString;
                 this->parserStrings(inputResult, tmpStrings);
                 auto* inst = new InstructionWith3Arg();
+
                 *inst->argument = tmpStrings[0];
                 *inst->arg2 = tmpStrings[1];
                 *inst->arg3 = tmpStrings[2];
                 return inst;
+
+
+
 
          }
     void compileFunc(std::string_view inputResult) {
@@ -644,6 +678,9 @@ class parser {
                     *instu->code = "add";
                     *instu->cacheHashCommand = calculateHashRun(*instu->command);
                     *instu->cacheHashCode = calculateHashRun(*instu->code);
+                    instu->firstArgument = stringToDouble(*instu->argument);
+                    instu->secondArgument = stringToDouble(*instu->arg2);
+                    instu->thirdArgument = stringToDouble(*instu->arg3);
                     seq.add(instu);
                     break;
                 }
@@ -653,6 +690,9 @@ class parser {
                     *instu->code = "mul";
                     *instu->cacheHashCommand = calculateHashRun(*instu->command);
                     *instu->cacheHashCode = calculateHashRun(*instu->code);
+                    instu->firstArgument = stringToDouble(*instu->argument);
+                    instu->secondArgument = stringToDouble(*instu->arg2);
+                    instu->thirdArgument = stringToDouble(*instu->arg3);
                     seq.add(instu);
                     break;
                 }
@@ -662,6 +702,9 @@ class parser {
                     *instu->code = "sub";
                     *instu->cacheHashCommand = calculateHashRun(*instu->command);
                     *instu->cacheHashCode = calculateHashRun(*instu->code);
+                    instu->firstArgument = stringToDouble(*instu->argument);
+                    instu->secondArgument = stringToDouble(*instu->arg2);
+                    instu->thirdArgument = stringToDouble(*instu->arg3);
                     seq.add(instu);
                     break;
                 }
@@ -671,6 +714,9 @@ class parser {
                     *instu->code = "div";
                     *instu->cacheHashCommand = calculateHashRun(*instu->command);
                     *instu->cacheHashCode = calculateHashRun(*instu->code);
+                    instu->firstArgument = stringToDouble(*instu->argument);
+                    instu->secondArgument = stringToDouble(*instu->arg2);
+                    instu->thirdArgument = stringToDouble(*instu->arg3);
                     seq.add(instu);
                     break;
                 }
@@ -706,6 +752,18 @@ class parser {
                      *inst->cacheHashCommand = calculateHashRun(*inst->command);
                      seq.add(inst);
                      break;
+                 }
+                 case calculateHash("set"): {
+                     InstructionWith3Arg *instu = new InstructionWith3Arg();
+                     *instu->argument = OpType;
+                     *instu->arg2 = firstArgument;
+                     *instu->command = "set";
+                     *instu->cacheHashCommand = calculateHashRun(*instu->command);
+                     instu->firstArgument = stringToDouble(*instu->arg2);
+                     seq.add(instu);
+
+
+
                  }
 
         }
