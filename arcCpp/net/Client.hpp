@@ -15,8 +15,8 @@ namespace arc::net {
         sockaddr_in targetAddr{};
         std::string targetIp =  "127.0.0.1";
         uint8_t buffer[4096];
-        Client(int port) {
-        targetPort = port;
+        Client() {
+
         }
         void init() {
             socketNum = socket(AF_INET, SOCK_STREAM, 0);
@@ -24,13 +24,16 @@ namespace arc::net {
                throw std::runtime_error("Ошибка создания сокета");
                 return;
             }
-
-            targetAddr.sin_family = AF_INET;
-            targetAddr.sin_port = htons(targetPort);
-            inet_pton(AF_INET, targetIp.c_str(), &targetAddr.sin_addr);
-
         }
-        void send(uint8_t* data, int size) {
+         void connect(bool isIPv4) {
+             targetAddr.sin_family = AF_INET;
+             targetAddr.sin_port = htons(targetPort);
+             inet_pton(AF_INET, targetIp.c_str(), &targetAddr.sin_addr);
+          int status = ::connect(socketNum, (struct sockaddr*)&targetAddr, sizeof(targetAddr));
+          if(status == -1) throw std::runtime_error("Ошибка подключения к серверу: " + std::to_string(errno));
+
+         }
+        void send(const uint8_t* data, int size) {
             if(socketNum != -1 && socketNum != 0) {
                 ::send(socketNum, data, size, 0);
 
@@ -44,8 +47,17 @@ namespace arc::net {
                 callback(buffer, status);
             }
         }
+        void disconnect() {
+            if (socketNum > 0) {
+                ::shutdown(socketNum, SHUT_RDWR);
 
+                ::close(socketNum);
 
-
+                socketNum = 0;
+            }
+        }
+        ~Client() {
+            disconnect();
+        }
     };
 }
