@@ -17,6 +17,7 @@ namespace arc::net {
         uint8_t buffer[4096];
         Client() {
 
+
         }
         void init() {
             socketNum = socket(AF_INET, SOCK_STREAM, 0);
@@ -25,9 +26,11 @@ namespace arc::net {
                 return;
             }
         }
+
          void connect(bool isIPv4) {
-             targetAddr.sin_family = AF_INET;
+             targetAddr.sin_family = isIPv4 ? AF_INET : AF_INET6;
              targetAddr.sin_port = htons(targetPort);
+
              inet_pton(AF_INET, targetIp.c_str(), &targetAddr.sin_addr);
           int status = ::connect(socketNum, (struct sockaddr*)&targetAddr, sizeof(targetAddr));
           if(status == -1) throw std::runtime_error("Ошибка подключения к серверу: " + std::to_string(errno));
@@ -61,3 +64,5 @@ namespace arc::net {
         }
     };
 }
+
+
