@@ -21,6 +21,7 @@
 #include <string>
 #include <cstring>
 #include <poll.h>
+#include "MLogIExtern.hpp"
 /*Зачем я пишу проект на С++? Мне надо расти в IT и как личность, но при этом я могу натворить дел так, что у меня весь Си
  будет вайбкодиться. Поэтому, я не перейду на rust пока.
 
@@ -61,12 +62,7 @@ struct Instruction {
     }
 };
 
-struct Var {
-    int type = 0; //0 Это num, 1 это str. bool это int. 2 ЭтоМаркер?
-    std::string str = "";
-    double num = 0;
 
-};
 
 constexpr std::size_t calculateHash(std::string_view object) {
 constexpr std::uint64_t FnvBasis = 14695981039346656037ULL;
@@ -95,6 +91,19 @@ static arc::net::Client netClient; //не знаю зачем, но пусть �
 static int stepCounter = 0;
 static std::chrono::steady_clock::time_point waitMS; //Я тут подумал, чтобы избежать в главном потоке зависаний, нужно для wait логику как в горутинах (я не знаю что такое горутины).
 static bool isWaitingMLog = false;
+extern "C" {
+Var getVar(const char* str) {
+    return doubleMap.get(str);
+
+}
+void setVar(const char* key, Var value) {
+    return doubleMap.put(key, value);
+
+}
+void logInArc(const char* text, int level) {
+    arc::util::Log::logWithLevel(text, level);
+}
+}
 
 class parser {
   public:
@@ -247,7 +256,6 @@ class parser {
 
             isWaitingMLog = true;
             }
-
 
 
             }
@@ -722,6 +730,10 @@ class parser {
                               seq.clear();
                                break;
                           }
+                     if(tmpString == "reload") {
+
+
+                     }
                      if(tmpString == "exit") return 0;
                       p.add(tmpString);
                       } else if (isRunning) {

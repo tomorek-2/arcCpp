@@ -13,7 +13,7 @@ static void warn(const std::string& str);
 static void debug(const std::string& str);
 static void err(const std::string_view& str);
 static void info(const std::string_view& str);
-
+static void logWithLevel(const char* text, int level);
     };
 }
 

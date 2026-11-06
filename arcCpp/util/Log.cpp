@@ -40,5 +40,11 @@ arc::util::LogHandler logger;
 
 
     }
+    void Log::logWithLevel(const char* str, int level) {
+        std::string tmpString(str);
+        logger.logLevel(tmpString, arc::util::Log::logLevel, level);
+
+
+    }
 
 }
