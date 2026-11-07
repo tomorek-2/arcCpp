@@ -46,30 +46,31 @@ int lastUse = 0;
 
 
                 }
-                for(bool space : std::span<bool>(freeSpace, length)) {
-                    newSpace[i2] = freeSpace[i2];
-                    i2++;
-                }
 
 
                 int i = 0;
-std::hash <K> hash;
+                std::hash <K> hash;
+                int  keyHash = 0;
+                keyHash = hash(key[i]) % size;
+                while(true) {
+                    if(i < length) {
+                         if (hash(key[i]) % length < length) {
+                             if (!freeSpace[i]) {
+                                if(keyHash < size && newSpace[keyHash]) {
 
-while(true) {
-if(i < length) {
-    if (hash(key[i]) % length < length) {
-        if (!freeSpace[i]) {
-if(!newSpace[i]) {
-          int  keyHash = hash(key[i]) % size;
-            newKey[keyHash] = key[i];
-            newValue[keyHash] = value[i];
-            newSpace[keyHash] = false;
-            i++;
-}
-        } else i++;
-    } else break;
-} else break;
-}
+                                    newKey[keyHash] = key[i];
+                                    newValue[keyHash] = value[i];
+                                    newSpace[keyHash] = false;
+                                    i++;
+                                    keyHash = hash(key[i]) % size;
+                                } else {
+                                    keyHash++;
+                                    continue;
+                                };
+                             } else i++;
+                         } else break;
+                    } else break;
+                }
 
                 delete[] key;
                 key = newKey;

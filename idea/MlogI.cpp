@@ -22,6 +22,7 @@
 #include <cstring>
 #include <poll.h>
 #include "MLogIExtern.hpp"
+#include <xmmintrin.h>
 /*Зачем я пишу проект на С++? Мне надо расти в IT и как личность, но при этом я могу натворить дел так, что у меня весь Си
  будет вайбкодиться. Поэтому, я не перейду на rust пока.
 
@@ -392,6 +393,7 @@ class parser {
                                 auto val = doubleMap.get(*instruct->argument);
                                 if (val.type == 0) { val.num = instruct->firstArgument; }
                                 else if (val.type == 1) { val.str = *instruct->arg2; }
+
                                 doubleMap.put(*instruct->argument, val);
 
 
@@ -408,7 +410,17 @@ class parser {
                             auto val = doubleMap.get(*instruct->argument);
                             if (val.type == 0) { val.num = instruct->firstArgument; }
                             else if (val.type == 1) { val.str = *instruct->arg2; }
-                            doubleMap.put(*instruct->argument, val);
+                            switch(*instruct->cacheHashCode) {
+                                case calculateHash("@counter"): {
+                                    stepCounter = instruct->firstArgument;
+                                    break;
+                                }
+                                default: {
+
+                                    doubleMap.put(*instruct->argument, val);
+                                    break;
+                                }
+                            }
 
 
                             break;
@@ -599,6 +611,7 @@ class parser {
                      *instu->arg2 = firstArgument;
                      *instu->command = "set";
                      *instu->cacheHashCommand = calculateHashRun(*instu->command);
+                     *instu->cacheHashCode = calculateHashRun(*instu->argument);
                      instu->firstArgument = stringToDouble(*instu->arg2);
                      seq.add(instu);
                  }
